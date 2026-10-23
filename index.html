@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calificador IA</title>
+<meta name="description" content="Califica tareas con IA, arma tus materias con el Proyecto Formativo y el aula de Moodle, y corrige exámenes escaneando las hojas. Para docentes universitarios.">
+<meta property="og:title" content="Calificador IA — menos horas calificando, más horas enseñando">
+<meta property="og:description" content="Califica con IA, arma tu materia y corrige exámenes de opción múltiple. Para docentes. 10 créditos de regalo.">
+<meta property="og:image" content="img/revision.jpg">
+<link rel="icon" href="img/icono.png">
+<style>
+  /* ============================================================ configuración */
+  :root {
+    --navy: #0f1b3d; --azul: #2f54eb; --azul-2: #1d3bb3; --azul-suave: #eef2ff; --verde: #0f9d58; --verde-suave: #e8f7ef;
+    --ambar: #b45309; --ambar-suave: #fff7ed; --tinta: #111827; --texto-2: #4b5563; --texto-3: #6b7280; --borde: #e5e7eb;
+    --fondo: #ffffff; --fondo-2: #f6f8fc; --sombra: 0 10px 30px rgba(15, 27, 61, .10); --radio: 16px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --navy: #070d22; --azul: #6f8cff; --azul-2: #8ea4ff; --azul-suave: #1a2550; --verde: #34d399; --verde-suave: #0d2e22;
+      --ambar: #fbbf24; --ambar-suave: #2e2410; --tinta: #eef1f7; --texto-2: #c3c9d6; --texto-3: #9aa3b5; --borde: #283149;
+      --fondo: #0d1324; --fondo-2: #111a30; --sombra: 0 10px 30px rgba(0, 0, 0, .35);
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; color: var(--tinta); background: var(--fondo);
+         line-height: 1.6; font-size: 17px; -webkit-font-smoothing: antialiased; }
+  img { max-width: 100%; display: block; }
+  a { color: var(--azul); }
+  .contenedor { max-width: 1160px; margin: 0 auto; padding: 0 20px; }
+  .btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 26px; border-radius: 12px; font-weight: 700; font-size: 17px;
+         text-decoration: none; border: 2px solid transparent; transition: transform .12s, box-shadow .12s; cursor: pointer; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn.primario { background: var(--azul); color: #fff; box-shadow: 0 8px 22px rgba(47, 84, 235, .35); }
+  .btn.claro { background: #fff; color: var(--azul-2); }
+  .btn.borde { border-color: rgba(255,255,255,.55); color: #fff; }
+  .btn svg { width: 20px; height: 20px; }
+  .etiqueta { display: inline-block; font-size: 13px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--azul); margin-bottom: 8px; }
+  h1, h2, h3 { line-height: 1.15; margin: 0 0 14px; }
+  h2 { font-size: clamp(28px, 4vw, 40px); }
+  .sub { color: var(--texto-2); font-size: 18px; max-width: 720px; }
+  section { padding: 84px 0; }
+  section.gris { background: var(--fondo-2); }
+
+  /* ============================================================ cabecera */
+  header { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--fondo) 88%, transparent); backdrop-filter: blur(10px);
+           border-bottom: 1px solid var(--borde); }
+  header .contenedor { display: flex; align-items: center; justify-content: space-between; height: 66px; gap: 16px; }
+  .marca { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 19px; color: var(--tinta); text-decoration: none; }
+  .marca img { width: 34px; height: 34px; border-radius: 9px; }
+  nav.menu { display: flex; gap: 22px; align-items: center; }
+  nav.menu a { color: var(--texto-2); text-decoration: none; font-weight: 600; font-size: 15px; }
+  nav.menu a.btn { color: #fff; padding: 9px 18px; font-size: 15px; }
+  @media (max-width: 820px) { nav.menu a:not(.btn) { display: none; } }
+
+  /* ============================================================ portada */
+  .heroe { background: radial-gradient(1200px 500px at 85% -10%, #6d5cff 0%, transparent 60%), linear-gradient(135deg, #0f1b3d 0%, #1d3bb3 55%, #2f54eb 100%);
+           color: #fff; padding: 72px 0 0; overflow: hidden; }
+  .heroe .contenedor { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 40px; align-items: center; }
+  .heroe h1 { font-size: clamp(34px, 5vw, 54px); letter-spacing: -.02em; }
+  .heroe p { font-size: 19px; color: #dbe3ff; max-width: 560px; }
+  .heroe .acciones { display: flex; gap: 14px; flex-wrap: wrap; margin: 28px 0 14px; }
+  .heroe .nota { font-size: 14px; color: #c7d2fe; }
+  .heroe .captura { border-radius: 14px 14px 0 0; box-shadow: 0 -10px 60px rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.18); border-bottom: 0;
+                    transform: translateY(12px); }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
+  .chip { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); padding: 6px 12px; border-radius: 999px; font-size: 14px; font-weight: 600; }
+  @media (max-width: 900px) { .heroe .contenedor { grid-template-columns: 1fr; } .heroe { padding-top: 48px; } }
+
+  /* ============================================================ video y cifras */
+  .video { aspect-ratio: 16 / 9; border-radius: var(--radio); overflow: hidden; box-shadow: var(--sombra); background: #000; position: relative; border: 1px solid var(--borde); }
+  .video iframe { width: 100%; height: 100%; border: 0; }
+  .video .pronto { position: absolute; inset: 0; display: grid; place-items: center; background: linear-gradient(0deg, rgba(15,27,61,.82), rgba(15,27,61,.35)), url(img/revision.jpg) center/cover; color: #fff; text-align: center; padding: 20px; }
+  .video .pronto b { display: block; font-size: 24px; }
+  .cifras { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 36px; }
+  .cifra { background: var(--fondo); border: 1px solid var(--borde); border-radius: var(--radio); padding: 20px; }
+  .cifra b { font-size: 30px; display: block; color: var(--azul-2); }
+  .cifra span { color: var(--texto-2); font-size: 15px; }
+  @media (max-width: 820px) { .cifras { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+  /* ============================================================ funciones */
+  .funcion { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 48px; align-items: center; margin-top: 64px; }
+  .funcion.inversa { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+  .funcion.inversa .texto { order: 2; }
+  .funcion ul { padding: 0; list-style: none; margin: 18px 0 0; }
+  .funcion li { padding-left: 32px; position: relative; margin-bottom: 10px; color: var(--texto-2); }
+  .funcion li::before { content: "✓"; position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--verde-suave);
+                        color: var(--verde); font-weight: 900; font-size: 13px; display: grid; place-items: center; margin-top: 3px; }
+  .funcion li b { color: var(--tinta); }
+  .marco { border-radius: 14px; overflow: hidden; box-shadow: var(--sombra); border: 1px solid var(--borde); background: var(--fondo); }
+  .mosaico { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .mosaico .marco:first-child { grid-column: span 2; }
+  .pie-img { font-size: 13px; color: var(--texto-3); margin-top: 8px; text-align: center; }
+  .icono-f { width: 54px; height: 54px; border-radius: 14px; display: grid; place-items: center; font-size: 28px; background: var(--azul-suave); margin-bottom: 16px; }
+  @media (max-width: 900px) { .funcion, .funcion.inversa { grid-template-columns: 1fr; gap: 24px; } .funcion.inversa .texto { order: 0; } }
+
+  /* ============================================================ pasos, precios, instalar */
+  .pasos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 36px; counter-reset: paso; }
+  .paso { background: var(--fondo); border: 1px solid var(--borde); border-radius: var(--radio); padding: 24px; position: relative; }
+  .paso::before { counter-increment: paso; content: counter(paso); width: 38px; height: 38px; border-radius: 50%; background: var(--azul); color: #fff;
+                  display: grid; place-items: center; font-weight: 800; margin-bottom: 12px; }
+  .paso p { color: var(--texto-2); margin: 0; font-size: 16px; }
+  @media (max-width: 820px) { .pasos { grid-template-columns: 1fr; } }
+  .precios { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 36px; }
+  .plan { background: var(--fondo); border: 1px solid var(--borde); border-radius: var(--radio); padding: 26px; display: flex; flex-direction: column; gap: 6px; }
+  .plan.destacado { border: 2px solid var(--azul); box-shadow: 0 12px 30px rgba(47, 84, 235, .18); position: relative; }
+  .plan.destacado::after { content: "Más elegido"; position: absolute; top: -12px; right: 18px; background: var(--azul); color: #fff; font-size: 12px; font-weight: 800; padding: 3px 10px; border-radius: 999px; }
+  .plan .precio { font-size: 34px; font-weight: 800; }
+  .plan .rinde { color: var(--texto-2); font-size: 15px; }
+  .plan.gratis { background: var(--verde-suave); border-color: transparent; }
+  @media (max-width: 900px) { .precios { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 520px) { .precios { grid-template-columns: 1fr; } }
+  .tabla-costos { width: 100%; border-collapse: collapse; margin-top: 24px; background: var(--fondo); border-radius: 12px; overflow: hidden; border: 1px solid var(--borde); font-size: 16px; }
+  .tabla-costos th, .tabla-costos td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--borde); }
+  .tabla-costos th { background: var(--fondo-2); font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--texto-3); }
+  .instalar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 36px; align-items: start; margin-top: 30px; }
+  .smartscreen { background: #0067b8; color: #fff; border-radius: 10px; padding: 22px; font-family: "Segoe UI", sans-serif; box-shadow: var(--sombra); }
+  .smartscreen h4 { font-size: 22px; font-weight: 400; margin: 0 0 10px; }
+  .smartscreen p { font-size: 14px; color: #e5f1fb; margin: 0 0 10px; }
+  .smartscreen .enlace { text-decoration: underline; font-size: 14px; font-weight: 600; outline: 3px dashed #ffd400; outline-offset: 3px; display: inline-block; }
+  .smartscreen .botones { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+  .smartscreen .botones span { border: 1px solid #fff; padding: 6px 18px; font-size: 14px; }
+  .smartscreen .botones span.marcado { outline: 3px dashed #ffd400; outline-offset: 3px; background: rgba(255,255,255,.12); }
+  .flecha { font-size: 14px; color: var(--ambar); font-weight: 700; margin: 8px 0 18px; }
+  ol.instrucciones { padding-left: 22px; margin: 0; }
+  ol.instrucciones li { margin-bottom: 12px; color: var(--texto-2); }
+  ol.instrucciones li b { color: var(--tinta); }
+  @media (max-width: 900px) { .instalar { grid-template-columns: 1fr; } }
+
+  /* ============================================================ preguntas y pie */
+  details { background: var(--fondo); border: 1px solid var(--borde); border-radius: 12px; padding: 16px 20px; margin-bottom: 10px; }
+  details summary { cursor: pointer; font-weight: 700; font-size: 17px; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+  details summary::after { content: "+"; font-size: 22px; line-height: 1; color: var(--azul); }
+  details[open] summary::after { content: "–"; }
+  details p { color: var(--texto-2); margin: 10px 0 0; }
+  .cta-final { background: linear-gradient(135deg, #0f1b3d, #2f54eb); color: #fff; border-radius: 24px; padding: 48px; text-align: center; }
+  .cta-final p { color: #dbe3ff; }
+  footer { padding: 40px 0; color: var(--texto-3); font-size: 15px; border-top: 1px solid var(--borde); }
+  footer .contenedor { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .solo-windows { font-size: 14px; color: var(--texto-3); margin-top: 6px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="contenedor">
+    <a class="marca" href="#"><img src="img/icono.png" alt="">Calificador IA</a>
+    <nav class="menu">
+      <a href="#funciones">Funciones</a><a href="#precios">Precios</a><a href="#instalar">Instalar</a><a href="#preguntas">Preguntas</a>
+      <a class="btn primario" href="#" data-descarga>Descargar</a>
+    </nav>
+  </div>
+</header>
+
+<section class="heroe">
+  <div class="contenedor">
+    <div>
+      <div class="chip" style="display:inline-block;margin-bottom:16px">Para docentes universitarios · Moodle</div>
+      <h1>Menos horas calificando,<br>más horas enseñando.</h1>
+      <p>La IA califica las tareas de tus estudiantes —incluso fotos de trabajos hechos a mano—, arma tu materia con el Proyecto Formativo y el aula de Moodle, y corrige exámenes escaneando las hojas. <b>Tú revisas y decides la nota.</b></p>
+      <div class="acciones">
+        <a class="btn claro" href="#" data-descarga><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Descargar para Windows</a>
+        <a class="btn borde" href="#video">Ver cómo funciona</a>
+      </div>
+      <div class="nota"><span data-version>Versión 2.4</span> · Gratis para empezar: <b data-bienvenida>10</b> créditos de regalo al crear tu cuenta</div>
+      <div class="chips"><span class="chip">📝 Califica con IA</span><span class="chip">📚 Arma tu materia</span><span class="chip">🧾 Escanea exámenes</span></div>
+    </div>
+    <img class="captura" src="img/revision.jpg" alt="Revisión de calificaciones: nota, confianza y botón de aprobar por estudiante">
+  </div>
+</section>
+
+<section id="video">
+  <div class="contenedor">
+    <div style="text-align:center"><span class="etiqueta">En 3 minutos</span><h2>Mira cómo funciona</h2>
+      <p class="sub" style="margin:0 auto 28px">De las entregas de Moodle a las notas publicadas, con tu rúbrica y tu revisión.</p></div>
+    <div class="video" id="cajaVideo"><div class="pronto"><div><b>Video explicativo</b>Muy pronto aquí. Mientras tanto, mira las capturas de abajo.</div></div></div>
+    <div class="cifras">
+      <div class="cifra"><b>2 clics</b><span>para traer las entregas desde Moodle</span></div>
+      <div class="cifra"><b>Fotos</b><span>lee trabajos hechos a mano</span></div>
+      <div class="cifra"><b>100 %</b><span>de las notas las apruebas tú</span></div>
+      <div class="cifra"><b>Gratis</b><span>corregir exámenes de opción múltiple</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="gris" id="funciones">
+  <div class="contenedor">
+    <span class="etiqueta">Lo que hace</span><h2>Tres trabajos pesados, resueltos</h2>
+    <p class="sub">Pensado para la forma real en que trabajamos los docentes: Moodle, trabajos a mano, rúbricas y fechas que se cruzan.</p>
+
+    <div class="funcion">
+      <div class="texto">
+        <div class="icono-f">📝</div><h3 style="font-size:28px">Califica tareas con IA</h3>
+        <p class="sub" style="font-size:17px">Elige la actividad de Moodle y la app descarga las entregas solas. La IA aplica tu rúbrica criterio por criterio y redacta la retroalimentación con tu estilo.</p>
+        <ul>
+          <li><b>Lee fotos y PDF escaneados</b> de trabajos hechos a mano, Word, PDF y texto en línea.</li>
+          <li><b>Sin rúbrica, también:</b> la arma con la instrucción y los archivos de la actividad.</li>
+          <li><b>Pone 0</b> a quien no entregó, con un comentario que tú defines.</li>
+          <li><b>Aprueba con un clic</b> (uno por uno o todos) y publica las notas en Moodle.</li>
+          <li>Te avisa de lo que debes mirar: fotos borrosas, trabajos incompletos o fuera de tema.</li>
+        </ul>
+      </div>
+      <div><div class="marco"><img src="img/revision.jpg" alt="Tabla de revisión con notas propuestas"></div><div class="pie-img">Revisión: nota propuesta, confianza y alertas por estudiante.</div></div>
+    </div>
+
+    <div class="funcion inversa">
+      <div class="texto">
+        <div class="icono-f">📚</div><h3 style="font-size:28px">Arma tu materia completa</h3>
+        <p class="sub" style="font-size:17px">Sube el Programa Analítico y la app propone el Proyecto Formativo con fechas del módulo, y prepara el aula de Moodle lista para restaurar.</p>
+        <ul>
+          <li><b>Excel del Proyecto Formativo</b> en la plantilla oficial 2026, validado contra las reglas del manual (puntajes, horas, ODS).</li>
+          <li><b>Aula de Moodle con diseño</b>: banners, tarjetas, libro por bloque con fórmulas y gráficos, y autoevaluaciones.</li>
+          <li><b>Presentaciones PowerPoint</b> con gráficos reales y ejercicios resueltos paso a paso.</li>
+          <li>Semipresencial o presencial: las fechas salen solas del calendario del módulo.</li>
+        </ul>
+      </div>
+      <div class="mosaico">
+        <div class="marco"><img src="img/aula_moodle.jpg" alt="Aula de Moodle generada"></div>
+        <div class="marco"><img src="img/diapo_grafico.jpg" alt="Diapositiva con gráfico"></div>
+        <div class="marco"><img src="img/diapo_ejemplo.jpg" alt="Diapositiva con ejemplo resuelto"></div>
+      </div>
+    </div>
+
+    <div class="funcion">
+      <div class="texto">
+        <div class="icono-f">🧾</div><h3 style="font-size:28px">Corrige exámenes escaneando</h3>
+        <p class="sub" style="font-size:17px">Como ZipGrade, pero integrado con Moodle. Imprime la hoja de respuestas, fotografía las hojas con el celular o escanéalas en PDF, y listo.</p>
+        <ul>
+          <li><b>Sin IA y sin costo</b>: la lectura de burbujas es automática.</li>
+          <li>Reconoce al estudiante por su <b>carnet</b> y lo une con su usuario de Moodle.</li>
+          <li>Hasta 100 preguntas, 2 a 5 opciones y varias versiones (A, B, C, D).</li>
+          <li><b>Análisis por pregunta</b>: cuál falló más y cuál conviene revisar.</li>
+        </ul>
+      </div>
+      <div class="mosaico">
+        <div class="marco"><img src="img/examen_resultados.jpg" alt="Resultados del examen con análisis por pregunta"></div>
+        <div class="marco"><img src="img/hoja_respuestas.jpg" alt="Hoja de respuestas imprimible"></div>
+        <div class="marco"><img src="img/hoja_revisada.jpg" alt="Hoja leída con aciertos y errores marcados"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="contenedor">
+    <span class="etiqueta">Cómo funciona</span><h2>Empieza en 10 minutos</h2>
+    <div class="pasos">
+      <div class="paso"><h3>Instala y crea tu cuenta</h3><p>Descarga el instalador, ábrelo y crea tu cuenta desde la app. Recibes <b data-bienvenida>10</b> créditos de regalo.</p></div>
+      <div class="paso"><h3>Conecta tu Moodle</h3><p>Inicia sesión con tu cuenta institucional (Microsoft) en un clic. Solo una vez.</p></div>
+      <div class="paso"><h3>Califica, revisa y publica</h3><p>Elige la actividad, deja que la IA proponga las notas, apruébalas y publícalas en Moodle.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="gris" id="precios">
+  <div class="contenedor">
+    <span class="etiqueta">Precios</span><h2>Pagas solo lo que usas</h2>
+    <p class="sub">Sin suscripciones ni tarjetas internacionales. Compras créditos con QR desde la app y se acreditan en el día.</p>
+    <div class="precios" id="planes">
+      <div class="plan gratis"><b>Para empezar</b><div class="precio">Gratis</div><div class="rinde"><b data-bienvenida>10</b> créditos de regalo al crear tu cuenta. Los exámenes escaneados no consumen créditos.</div></div>
+    </div>
+    <table class="tabla-costos">
+      <thead><tr><th>Uso</th><th>Créditos aproximados</th></tr></thead>
+      <tbody>
+        <tr><td>Calificar 1 trabajo (Claude Haiku, con fotos)</td><td>0,03 – 0,1</td></tr>
+        <tr><td>Calificar una tarea de 40 estudiantes</td><td>2 – 4</td></tr>
+        <tr><td>Armar una materia completa (Claude Sonnet)</td><td>10 – 20</td></tr>
+        <tr><td>Corregir exámenes escaneados</td><td><b>0 (gratis)</b></td></tr>
+      </tbody>
+    </table>
+    <p class="solo-windows">Los créditos dependen del largo de los trabajos y del modelo elegido. La app muestra el costo estimado antes de calificar.</p>
+  </div>
+</section>
+
+<section id="instalar">
+  <div class="contenedor">
+    <span class="etiqueta">Instalación</span><h2>Instalar en Windows</h2>
+    <div class="instalar">
+      <ol class="instrucciones">
+        <li><b>Descarga</b> «Instalar_Calificador_IA.exe» con el botón de abajo (unos 140 MB).</li>
+        <li><b>Ábrelo.</b> Windows puede mostrar «Windows protegió su PC», porque el programa es nuevo y todavía no tiene firma comercial. Pulsa <b>«Más información»</b> y luego <b>«Ejecutar de todas formas»</b>.</li>
+        <li>Pulsa <b>Instalar</b>. No pide permisos de administrador y crea el acceso en el escritorio.</li>
+        <li>Abre la app y entra a <b>Ajustes → Cuenta</b> para crear tu cuenta.</li>
+        <li>Cuando haya una versión nueva, la app te avisará con un botón verde.</li>
+      </ol>
+      <div>
+        <div class="smartscreen">
+          <h4>Windows protegió su PC</h4>
+          <p>Microsoft Defender SmartScreen impidió el inicio de una aplicación no reconocida. Ejecutar esta aplicación puede poner en riesgo su PC.</p>
+          <span class="enlace">Más información</span>
+          <div class="botones"><span class="marcado">Ejecutar de todas formas</span><span>No ejecutar</span></div>
+        </div>
+        <div class="flecha">↑ Primero «Más información», luego «Ejecutar de todas formas».</div>
+        <a class="btn primario" href="#" data-descarga><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Descargar para Windows</a>
+        <div class="solo-windows">Windows 10 u 11 con Microsoft Edge (viene con Windows). No disponible para Mac.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="gris" id="preguntas">
+  <div class="contenedor" style="max-width:860px">
+    <span class="etiqueta">Preguntas frecuentes</span><h2>Lo que suelen preguntar</h2>
+    <details><summary>¿La IA pone la nota sola?</summary><p>No. La IA propone la nota por criterio con la evidencia del trabajo y un borrador de retroalimentación. Nada se publica en Moodle hasta que tú lo apruebas.</p></details>
+    <details><summary>¿Qué pasa con los datos de mis estudiantes?</summary><p>Las tareas, materias y exámenes se guardan en tu computadora. Para calificar, el contenido del trabajo se envía a la IA a través del servidor del Calificador y no se almacena allí: solo se registra cuántos créditos se usaron.</p></details>
+    <details><summary>¿Necesito una clave de IA o una tarjeta internacional?</summary><p>No. Solo creas tu cuenta y compras créditos con QR desde la app.</p></details>
+    <details><summary>¿Funciona con mi Moodle?</summary><p>Funciona con Moodle 4 de la universidad, iniciando sesión con tu cuenta institucional (Microsoft). Para publicar notas usa los mismos permisos que tienes como docente.</p></details>
+    <details><summary>¿«Armar materia» sirve para cualquier universidad?</summary><p>El Excel y el aula siguen el formato del Proyecto Formativo de la UPDS (plantilla 2026). Las presentaciones, libros, ejercicios y autoevaluaciones sirven para cualquier materia.</p></details>
+    <details><summary>¿Es una herramienta oficial de la universidad?</summary><p>No. Es una herramienta independiente creada por un docente para docentes. Tú decides cómo usarla en tus materias.</p></details>
+    <details><summary>¿Cuánto tarda en acreditarse un pago?</summary><p>Normalmente el mismo día: subes la captura del comprobante y el administrador lo verifica.</p></details>
+    <details><summary>¿Puedo usarlo en Mac?</summary><p>Por ahora solo en Windows 10 u 11.</p></details>
+  </div>
+</section>
+
+<section>
+  <div class="contenedor">
+    <div class="cta-final">
+      <h2>Prueba gratis con <span data-bienvenida>10</span> créditos</h2>
+      <p>Descarga la app, crea tu cuenta y califica tu primera tarea hoy.</p>
+      <a class="btn claro" href="#" data-descarga style="margin-top:12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Descargar para Windows</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="contenedor">
+    <div><b>Calificador IA</b> · Diseñado por Lic. Salvador Ortega Pardo</div>
+    <div id="contacto"></div>
+  </div>
+</footer>
+
+<script>
+  // ======================================================= ajustes del portal
+  const PORTAL = {
+    youtube: "",          // pega aquí el ID del video de YouTube (lo que va después de «v=»)
+    contacto: "",         // correo o WhatsApp de contacto (vacío = no se muestra)
+    servidor: "https://waznmuxboomdezeqvkil.supabase.co/functions/v1/calificador",
+  };
+  const fmt = (n, d = 0) => Number(n).toLocaleString("es-BO", { minimumFractionDigits: d, maximumFractionDigits: d });
+
+  // Descarga y versión (version.json lo lee también la app para avisar de actualizaciones)
+  fetch("version.json", { cache: "no-store" }).then((r) => r.json()).then((v) => {
+    document.querySelectorAll("[data-descarga]").forEach((a) => (a.href = v.descarga));
+    document.querySelectorAll("[data-version]").forEach((e) => (e.textContent = `Versión ${v.version}`));
+  }).catch(() => {});
+
+  // Precios en vivo (los mismos que ve el docente en la app)
+  fetch(PORTAL.servidor + "/publico").then((r) => r.json()).then((p) => {
+    document.querySelectorAll("[data-bienvenida]").forEach((e) => (e.textContent = p.bienvenida));
+    const precio = parseFloat(p.precio_bs_credito), usd = p.usd_por_credito || 0.1;
+    const planes = document.getElementById("planes");
+    p.paquetes.forEach((n, i) => {
+      const tareas = Math.floor(n / 3);
+      planes.insertAdjacentHTML("beforeend", `<div class="plan ${i === 1 ? "destacado" : ""}"><b>${n} créditos</b>
+        <div class="precio">Bs ${fmt(n * precio)}</div><div class="rinde">≈ ${tareas} tareas de 40 estudiantes con Haiku</div></div>`);
+    });
+  }).catch(() => {
+    document.getElementById("planes").insertAdjacentHTML("beforeend",
+      `<div class="plan"><b>Paquetes de créditos</b><div class="rinde">Desde Bs 1,50 por crédito. Mira los paquetes en la app.</div></div>`);
+  });
+
+  if (PORTAL.youtube) {
+    document.getElementById("cajaVideo").innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${PORTAL.youtube}" title="Calificador IA" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+  }
+  if (PORTAL.contacto) {
+    document.getElementById("contacto").innerHTML = PORTAL.contacto.includes("@")
+      ? `Contacto: <a href="mailto:${PORTAL.contacto}">${PORTAL.contacto}</a>`
+      : `Contacto: <a href="https://wa.me/${PORTAL.contacto.replace(/\D/g, "")}">WhatsApp ${PORTAL.contacto}</a>`;
+  }
+</script>
+</body>
+</html>

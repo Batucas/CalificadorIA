@@ -1,0 +1,10 @@
+{
+  "version": "2.4",
+  "descarga": "https://github.com/Batucas/CalificadorIA/releases/latest/download/Instalar_Calificador_IA.exe",
+  "portal": "https://batucas.github.io/CalificadorIA/",
+  "novedades": [
+    "Cuenta propia con créditos (sin clave de IA)",
+    "Exámenes: hoja de respuestas y lectura de fotos o PDF",
+    "Armar materia: aula de Moodle con diseño, libro y autoevaluaciones"
+  ]
+}
