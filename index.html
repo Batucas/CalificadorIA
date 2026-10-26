@@ -334,7 +334,8 @@
   // ======================================================= ajustes del portal
   const PORTAL = {
     youtube: "",          // pega aquí el ID del video de YouTube (lo que va después de «v=»)
-    contacto: "",         // correo o WhatsApp de contacto (vacío = no se muestra)
+    correo: "salvadorv.ortega@proton.me",
+    whatsapp: "59172450325",   // con código de país (Bolivia: 591), sin espacios
     servidor: "https://waznmuxboomdezeqvkil.supabase.co/functions/v1/calificador",
   };
   const fmt = (n, d = 0) => Number(n).toLocaleString("es-BO", { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -363,11 +364,11 @@
   if (PORTAL.youtube) {
     document.getElementById("cajaVideo").innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${PORTAL.youtube}" title="Calificador IA" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
   }
-  if (PORTAL.contacto) {
-    document.getElementById("contacto").innerHTML = PORTAL.contacto.includes("@")
-      ? `Contacto: <a href="mailto:${PORTAL.contacto}">${PORTAL.contacto}</a>`
-      : `Contacto: <a href="https://wa.me/${PORTAL.contacto.replace(/\D/g, "")}">WhatsApp ${PORTAL.contacto}</a>`;
-  }
+  const contacto = [
+    PORTAL.whatsapp && `<a href="https://wa.me/${PORTAL.whatsapp}?text=${encodeURIComponent("Hola, tengo una consulta sobre Calificador IA")}" target="_blank" rel="noopener">WhatsApp ${PORTAL.whatsapp.replace(/^591/, "")}</a>`,
+    PORTAL.correo && `<a href="mailto:${PORTAL.correo}">${PORTAL.correo}</a>`,
+  ].filter(Boolean);
+  if (contacto.length) document.getElementById("contacto").innerHTML = "Contacto: " + contacto.join(" · ");
 </script>
 </body>
 </html>
