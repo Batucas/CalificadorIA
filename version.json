@@ -1,10 +1,10 @@
 {
-  "version": "2.5",
+  "version": "2.6",
   "descarga": "https://github.com/Batucas/CalificadorIA/releases/latest/download/Instalar_Calificador_IA.exe",
   "portal": "https://batucas.github.io/CalificadorIA/",
   "novedades": [
-    "Armar materia: personaliza el diseño (temas, colores, letra y logo de tu universidad)",
-    "Elige las actividades de cada bloque: foros, glosario, lección, mapa mental, consulta y más",
-    "Actividades con puntaje como tarea, cuestionario en línea o foro evaluado"
+    "Cronograma de evaluación por criterio con botones que llevan directo a cada actividad",
+    "Armar materia: personaliza el diseño y el logo de tu universidad",
+    "Foros, glosario, lección, mapa mental y consulta en cada bloque"
   ]
 }
