@@ -1,0 +1,55 @@
+/* Calificador IA — Juegos para clase (pantalla completa, legible en proyector). */
+.juego-capa { position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; background: #0b1030; color: #fff;
+  font-family: "Segoe UI", system-ui, sans-serif; user-select: none; }
+.juego-barra { display: flex; align-items: center; gap: 16px; padding: 8px 16px; background: #070a20; border-bottom: 2px solid #1f2a6b; }
+.juego-titulo { font-weight: 800; font-size: 17px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.juego-marcador { display: flex; align-items: center; gap: 18px; font-weight: 800; font-size: 18px; }
+.juego-vidas i { color: #ff4d6d; font-style: normal; font-size: 20px; margin-right: 2px; }
+.juego-vidas i.vacia { color: #3b4270; }
+.juego-puntos { color: #ffd166; font-variant-numeric: tabular-nums; }
+.juego-progreso { color: #a5b4fc; font-size: 15px; }
+.juego-botones { display: flex; gap: 6px; }
+.juego-botones button, .juego-aviso-botones button { background: #1f2a6b; color: #fff; border: 0; border-radius: 8px; padding: 6px 11px; font-size: 16px; cursor: pointer; }
+.juego-botones button:hover, .juego-aviso-botones button:hover { background: #2f3fa0; }
+.juego-pregunta { padding: 14px 24px; font-size: clamp(18px, 2.6vw, 34px); font-weight: 800; line-height: 1.25; text-align: center;
+  background: linear-gradient(90deg, #1b1f5e, #2b1f6e); border-bottom: 2px solid #1f2a6b; }
+.juego-cuerpo { flex: 1; display: flex; gap: 14px; padding: 12px; min-height: 0; }
+.juego-lienzo { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; }
+.juego-lienzo canvas { image-rendering: pixelated; image-rendering: crisp-edges; border-radius: 6px; box-shadow: 0 0 0 3px #1f2a6b, 0 10px 40px rgba(0,0,0,.5); touch-action: none; }
+.juego-opciones { width: clamp(220px, 26vw, 420px); display: flex; flex-direction: column; gap: 10px; justify-content: center; }
+.juego-opcion { display: flex; align-items: center; gap: 12px; background: #151b4d; border-radius: 12px; padding: 12px 14px; font-size: clamp(15px, 1.6vw, 24px);
+  font-weight: 700; border: 2px solid transparent; transition: opacity .2s, transform .2s; }
+.juego-opcion b { flex: none; width: 1.9em; height: 1.9em; border-radius: 8px; display: grid; place-items: center; color: #fff; font-size: 1.05em; }
+.juego-opcion.es-correcta { border-color: #22c55e; background: #12452c; transform: scale(1.03); }
+.juego-opcion.es-error { border-color: #ef4444; background: #4a1622; }
+.juego-opcion.apagada { opacity: .4; }
+.juego-mando { position: absolute; inset: auto 0 6px 0; display: none; justify-content: space-between; padding: 0 10px; pointer-events: none; }
+.juego-mando button { pointer-events: auto; width: 62px; height: 62px; border-radius: 50%; border: 0; background: rgba(255,255,255,.18); color: #fff; font-size: 24px; touch-action: none; }
+@media (pointer: coarse) { .juego-mando { display: flex; } }
+.juego-aviso { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(5,8,25,.55); z-index: 2; }
+.juego-aviso.oculto { display: none; }
+.juego-aviso-caja { background: #fff; color: #111827; border-radius: 18px; padding: 22px 28px; max-width: min(640px, 92vw); text-align: center;
+  font-size: clamp(16px, 1.6vw, 22px); box-shadow: 0 20px 60px rgba(0,0,0,.45); animation: juegoAparece .25s ease-out; }
+.juego-aviso.bien .juego-aviso-caja { border-top: 8px solid #22c55e; }
+.juego-aviso.mal .juego-aviso-caja { border-top: 8px solid #ef4444; }
+.juego-aviso-titulo { font-size: 1.6em; font-weight: 900; margin-bottom: 6px; }
+.juego-aviso-expl { margin-top: 10px; color: #374151; font-size: .9em; }
+.juego-aviso-botones { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+.juego-aviso-botones button { background: #2f54eb; font-size: 17px; padding: 10px 18px; font-weight: 700; }
+.juego-aviso-caja.final { max-width: min(820px, 94vw); max-height: 86vh; display: flex; flex-direction: column; }
+.juego-final-cifras { display: flex; justify-content: center; gap: 28px; margin: 10px 0 14px; }
+.juego-final-cifras div { display: flex; flex-direction: column; }
+.juego-final-cifras b { font-size: 2em; color: #2f54eb; }
+.juego-final-cifras span { font-size: .8em; color: #6b7280; }
+.juego-final-lista { overflow: auto; text-align: left; font-size: .8em; border-top: 1px solid #e5e7eb; padding-top: 8px; }
+.juego-final-lista > div { padding: 6px 2px; border-bottom: 1px solid #f1f2f4; }
+.juego-final-lista .ok b { color: #16a34a; }
+.juego-final-lista .no b { color: #dc2626; }
+.juego-final-lista small { display: block; color: #6b7280; }
+@keyframes juegoAparece { from { transform: scale(.9); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (max-width: 760px) {
+  .juego-cuerpo { flex-direction: column; }
+  .juego-opciones { width: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .juego-opcion { padding: 8px; }
+  .juego-marcador { gap: 10px; font-size: 15px; }
+}

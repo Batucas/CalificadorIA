@@ -3,8 +3,11 @@
   "descarga": "https://github.com/Batucas/CalificadorIA/releases/latest/download/Instalar_Calificador_IA.exe",
   "portal": "https://batucas.github.io/CalificadorIA/",
   "novedades": [
-    "Actividades interactivas: ahora eliges tus cursos vigentes de Moodle como materia",
-    "Las preguntas se crean desde la sección o bloque del curso que elijas",
-    "En la lista solo aparecen las materias armadas que tienen programa"
+    "Juegos en vivo: proyecta un código QR, los estudiantes juegan desde el celular y ves la tabla de posiciones",
+    "Pasa las notas del juego en vivo a una Tarea de Moodle con un clic",
+    "Llevar a Moodle: descarga el juego como paquete SCORM y la nota va sola al libro de calificaciones",
+    "Aventura Pixel renovada: 4 mundos, personajes, potenciadores y jefe final",
+    "Los juegos siempre terminan: 3 vidas y la pregunta se pierde tras 2 caídas",
+    "Actividades interactivas: elige tus cursos vigentes de Moodle como materia"
   ]
 }
