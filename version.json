@@ -1,10 +1,10 @@
 {
-  "version": "2.6",
+  "version": "2.7",
   "descarga": "https://github.com/Batucas/CalificadorIA/releases/latest/download/Instalar_Calificador_IA.exe",
   "portal": "https://batucas.github.io/CalificadorIA/",
   "novedades": [
-    "Cronograma de evaluación por criterio con botones que llevan directo a cada actividad",
-    "Armar materia: personaliza el diseño y el logo de tu universidad",
-    "Foros, glosario, lección, mapa mental y consulta en cada bloque"
+    "Nuevo: Actividades interactivas con juegos para clase (laberinto y plataformas retro)",
+    "Crea preguntas con IA desde tu materia, un tema o un documento",
+    "Biblioteca compartida: copia y comparte juegos con otros docentes"
   ]
 }
