@@ -1,10 +1,10 @@
 {
-  "version": "2.7",
+  "version": "2.8",
   "descarga": "https://github.com/Batucas/CalificadorIA/releases/latest/download/Instalar_Calificador_IA.exe",
   "portal": "https://batucas.github.io/CalificadorIA/",
   "novedades": [
-    "Nuevo: Actividades interactivas con juegos para clase (laberinto y plataformas retro)",
-    "Crea preguntas con IA desde tu materia, un tema o un documento",
-    "Biblioteca compartida: copia y comparte juegos con otros docentes"
+    "Actividades interactivas: ahora eliges tus cursos vigentes de Moodle como materia",
+    "Las preguntas se crean desde la sección o bloque del curso que elijas",
+    "En la lista solo aparecen las materias armadas que tienen programa"
   ]
 }
