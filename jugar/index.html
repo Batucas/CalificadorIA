@@ -42,6 +42,16 @@
   .t-veredicto.bien { color: #4ade80; } .t-veredicto.mal { color: #f87171; }
   .t-expl { font-size: 14px; }
   .t-bloques { background: #0f1440; border-radius: 12px; padding: 12px; margin-top: 10px; font-size: 17px; }
+  .t-texto { width: 100%; font: inherit; font-size: 20px; padding: 14px; border-radius: 12px; border: 2px solid var(--borde); background: #0f1440; color: #fff; resize: vertical; }
+  .t-orden { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 8px; counter-reset: paso; }
+  .t-orden li { display: flex; align-items: center; gap: 8px; background: #0f1440; border: 2px solid var(--borde); border-radius: 12px; padding: 10px 10px 10px 12px; font-weight: 700; counter-increment: paso; }
+  .t-orden li::before { content: counter(paso) "."; color: #fde047; width: 20px; }
+  .t-orden li span { flex: 1; }
+  .t-orden li button { width: 44px; height: 40px; border: 0; border-radius: 10px; background: #3b2a9e; color: #fff; font-size: 18px; }
+  .t-orden-ver { padding-left: 22px; line-height: 1.6; font-weight: 700; }
+  .t-escala { text-align: center; font-size: 22px; margin: 10px 0; } .t-escala b { font-size: 46px; color: #fde047; display: block; }
+  .t-escala input { width: 100%; height: 36px; accent-color: #fde047; }
+  .t-escala-lim { display: flex; justify-content: space-between; font-size: 14px; color: var(--suave); }
   .t-pos { background: #0f1440; border-radius: 12px; padding: 12px; margin-top: 10px; font-size: 16px; }
   .t-mono { background: #4a2a0a; border-radius: 12px; padding: 12px; margin-top: 10px; font-weight: 800; }
   .t-espera { font-size: 46px; text-align: center; margin: 10px 0; animation: tLatir 1.2s ease-in-out infinite alternate; }
@@ -183,7 +193,7 @@ function empezarEquipos(yo) {
     }
   }
   function mostrar(e) {
-    const clave = `${e.fase}:${e.indice}:${e.pregunta && e.pregunta.mi_opcion}`;
+    const clave = `${e.fase}:${e.indice}:${e.pregunta && e.pregunta.respondida}`;
     if (clave === ultimaClave && e.fase !== "pregunta") return programar(2000);
     ultimaClave = clave; clearInterval(cuenta);
     if (e.fase === "lobby") {
@@ -191,44 +201,89 @@ function empezarEquipos(yo) {
       return programar(2000);
     }
     if (e.fase === "pregunta") {
-      const q = e.pregunta;
-      if (q.espera_ms > 0 && q.mi_opcion == null) {          // la pregunta se lee primero en la pantalla del aula
+      const q = e.pregunta, tipo = q.tipo || "opcion";
+      if (q.espera_ms > 0 && !q.respondida) {          // la pregunta se lee primero en la pantalla del aula
         pinta(`${cabecera(e)}<div class="t-num">Pregunta ${e.indice + 1} de ${e.total}</div><h1>¡Prepárate!</h1><p>Lee la pregunta en la pantalla del aula.</p><div class="t-espera">👀</div>`);
         ultimaClave = ""; return programar(q.espera_ms + 150);
       }
-      if (q.mi_opcion != null || q.restante_ms <= 0) {
+      if (q.respondida || q.restante_ms <= 0) {
+        const m = q.mi_respuesta || {};
+        const enviada = m.opcion != null ? `<div class="t-elegida" style="background:${COLORES[m.opcion]}">${LETRAS[m.opcion]}) ${esc(q.opciones[m.opcion])}</div>`
+          : m.texto != null ? `<div class="t-elegida" style="background:#3b2a9e">«${esc(m.texto)}»</div>`
+          : m.orden ? `<ol class="t-orden-ver">${m.orden.map((id) => `<li>${esc((q.elementos.find((x) => x.id === id) || {}).texto || "")}</li>`).join("")}</ol>`
+          : m.valor != null ? `<div class="t-elegida" style="background:#3b2a9e">${m.valor} ${esc(q.escala.unidad || "")}</div>` : "";
         pinta(`${cabecera(e)}<div class="t-num">Pregunta ${e.indice + 1} de ${e.total}</div>
-          ${q.mi_opcion != null ? `<h1>¡Respuesta enviada!</h1><div class="t-elegida" style="background:${COLORES[q.mi_opcion]}">${LETRAS[q.mi_opcion]}) ${esc(q.opciones[q.mi_opcion])}</div><p>Mira la pantalla: en un momento se revela la respuesta.</p>`
-            : `<h1>⏰ Se acabó el tiempo</h1><p>Espera la siguiente pregunta.</p>`}`);
+          ${q.respondida ? `<h1>¡Respuesta enviada!</h1>${enviada}<p>Mira la pantalla: en un momento se revela.</p>` : `<h1>⏰ Se acabó el tiempo</h1><p>Espera la siguiente pregunta.</p>`}`);
         return programar(2000);
       }
       const fin = Date.now() + q.restante_ms;
+      let entrada = "";
+      if (q.opciones) {
+        entrada = `<div class="t-opciones">${q.opciones.map((o, k) => `<button data-k="${k}" style="background:${COLORES[k]}"><b>${LETRAS[k]}</b><span>${esc(o)}</span></button>`).join("")}</div>`;
+      } else if (tipo === "escribir" || tipo === "nube") {
+        entrada = `<input id="tTexto" class="t-texto" maxlength="40" autocomplete="off" autocapitalize="off" placeholder="${tipo === "nube" ? "Una o dos palabras" : "Escribe tu respuesta"}">
+          <button class="grande" id="tEnviar">Enviar</button>`;
+      } else if (tipo === "abierta") {
+        entrada = `<textarea id="tTexto" class="t-texto" rows="3" maxlength="250" placeholder="Escribe tu respuesta"></textarea><button class="grande" id="tEnviar">Enviar</button>`;
+      } else if (tipo === "ordenar") {
+        entrada = `<p class="t-expl">Ordena de arriba (primero) hacia abajo (último) con las flechas.</p>
+          <ol class="t-orden" id="tOrden">${q.elementos.map((x) => `<li data-id="${x.id}"><span>${esc(x.texto)}</span>
+            <button data-mover="-1" aria-label="Subir">▲</button><button data-mover="1" aria-label="Bajar">▼</button></li>`).join("")}</ol>
+          <button class="grande" id="tEnviar">Enviar orden</button>`;
+      } else if (tipo === "escala") {
+        const es = q.escala, paso = (es.max - es.min) <= 20 ? 0.5 : (es.max - es.min) <= 200 ? 1 : Math.round((es.max - es.min) / 200);
+        entrada = `<div class="t-escala"><b id="tValor">${(es.min + es.max) / 2}</b> ${esc(es.unidad || "")}
+            <input type="range" id="tRango" min="${es.min}" max="${es.max}" step="${paso}" value="${(es.min + es.max) / 2}">
+            <div class="t-escala-lim"><span>${es.min}</span><span>${es.max}</span></div></div>
+          <button class="grande" id="tEnviar">Enviar</button>`;
+      }
       pinta(`${cabecera(e)}<div class="t-num">Pregunta ${e.indice + 1} de ${e.total} · <span id="tRest"></span></div>
-        <div class="t-pregunta">${esc(q.texto)}</div>
-        <div class="t-opciones">${q.opciones.map((o, k) => `<button data-k="${k}" style="background:${COLORES[k]}"><b>${LETRAS[k]}</b><span>${esc(o)}</span></button>`).join("")}</div>
-        <div id="msg"></div>`);
+        <div class="t-pregunta">${esc(q.texto)}</div>${entrada}<div id="msg"></div>`);
       const pintarRestante = () => { const r = Math.max(0, Math.ceil((fin - Date.now()) / 1000)); const el = $("#tRest"); if (el) el.textContent = `${r} s`;
         if (r <= 0) { clearInterval(cuenta); consultar(); } };
       pintarRestante(); cuenta = setInterval(pintarRestante, 250);
-      caja.querySelector(".t-opciones").onclick = async (ev) => {
-        const b = ev.target.closest("button[data-k]"); if (!b || enviando) return;
-        enviando = true; caja.querySelectorAll(".t-opciones button").forEach((x) => (x.disabled = true)); b.classList.add("sel");
-        try { await nube("/vivo/responder", { token: yo.token, opcion: +b.dataset.k }); }
-        catch (err) { aviso(err.message); }
-        enviando = false; clearInterval(cuenta); consultar();
+      const enviar = async (datos, boton) => {
+        if (enviando) return;
+        enviando = true; caja.querySelectorAll("button, input, textarea").forEach((x) => (x.disabled = true)); if (boton) boton.classList.add("sel");
+        try { await nube("/vivo/responder", { token: yo.token, ...datos }); clearInterval(cuenta); enviando = false; consultar(); }
+        catch (err) { aviso(err.message); enviando = false; caja.querySelectorAll("button, input, textarea").forEach((x) => (x.disabled = false)); }
       };
+      if (q.opciones) caja.querySelector(".t-opciones").onclick = (ev) => { const b = ev.target.closest("button[data-k]"); if (b) enviar({ opcion: +b.dataset.k }, b); };
+      const rango = $("#tRango"); if (rango) rango.oninput = () => ($("#tValor").textContent = rango.value);
+      const orden = $("#tOrden");
+      if (orden) orden.onclick = (ev) => {
+        const b = ev.target.closest("button[data-mover]"); if (!b) return;
+        const li = b.closest("li"), d = +b.dataset.mover;
+        if (d < 0 && li.previousElementSibling) li.parentNode.insertBefore(li, li.previousElementSibling);
+        if (d > 0 && li.nextElementSibling) li.parentNode.insertBefore(li.nextElementSibling, li);
+      };
+      const boton = $("#tEnviar");
+      if (boton) boton.onclick = () => {
+        if (orden) return enviar({ orden: [...orden.children].map((li) => +li.dataset.id) }, boton);
+        if (rango) return enviar({ valor: +rango.value }, boton);
+        const t = ($("#tTexto").value || "").trim(); if (!t) return aviso("Escribe tu respuesta.");
+        enviar({ texto: t }, boton);
+      };
+      const campo = $("#tTexto"); if (campo) { campo.focus(); if (tipo !== "abierta") campo.onkeydown = (ev) => ev.key === "Enter" && boton.click(); }
       return;   // mientras responde no se consulta al servidor
     }
     if (e.fase === "resultado") {
-      const r = e.resultado, mio = r.por_equipo[e.equipo] || { ganados: 0 }, mono = r.mono;
+      const r = e.resultado, tipo = r.tipo || "opcion", mio = r.por_equipo[e.equipo] || { ganados: 0 }, mono = r.mono;
       const monoTxt = mono && mono.equipo === e.equipo ? (mono.espantado ? "🐒 ¡El mono vino por tu torre y lo espantaron!" : `🐒 ¡El mono tumbó ${mono.quitados} bloques de tu torre!`) : "";
-      pinta(`${cabecera(e)}<div class="t-num">Pregunta ${e.indice + 1} de ${e.total}</div>
-        <div class="t-veredicto ${r.acerte ? "bien" : "mal"}">${r.acerte ? "¡Correcto! 🎉" : r.mi_opcion == null ? "No respondiste" : "Incorrecto"}</div>
-        <p>Respuesta correcta: <b>${LETRAS[r.correcta]}) ${esc(r.opciones[r.correcta])}</b></p>
+      let veredicto, correcta = "";
+      if (!r.califica) veredicto = `<div class="t-veredicto bien">${r.respondi ? "¡Gracias por participar! 🙌" : "No respondiste"}</div><p>Mira las respuestas de todos en la pantalla del aula.</p>`;
+      else {
+        veredicto = `<div class="t-veredicto ${r.acerte ? "bien" : "mal"}">${r.acerte ? "¡Correcto! 🎉" : !r.respondi ? "No respondiste" : "Incorrecto"}</div>`;
+        if (tipo === "opcion" || tipo === "vf") correcta = `<p>Respuesta correcta: <b>${LETRAS[r.correcta]}) ${esc(r.opciones[r.correcta])}</b></p>`;
+        else if (tipo === "escribir") correcta = `<p>Respuesta correcta: <b>${(r.respuestas || []).map(esc).join(" / ")}</b></p>`;
+        else if (tipo === "ordenar") correcta = `<p>Orden correcto:</p><ol class="t-orden-ver">${(r.elementos || []).map((x) => `<li>${esc(x)}</li>`).join("")}</ol>`;
+        else if (tipo === "escala") correcta = `<p>Respuesta correcta: <b>${r.escala.correcta} ${esc(r.escala.unidad || "")}</b>${r.escala.tolerancia ? ` (se aceptaba ±${r.escala.tolerancia})` : ""}${r.mi_respuesta ? ` · la tuya: ${r.mi_respuesta.valor}` : ""}</p>`;
+      }
+      pinta(`${cabecera(e)}<div class="t-num">Pregunta ${e.indice + 1} de ${e.total}</div>${veredicto}${correcta}
         ${r.explicacion ? `<p class="t-expl">${esc(r.explicacion)}</p>` : ""}
-        ${e.modo === "clasico" ? `<div class="t-bloques">${r.acerte ? `<b>+${r.puntos_ganados}</b> puntos${e.yo.racha >= 2 ? ` · 🔥 racha de ${e.yo.racha}` : ""}` : "Esta vez sin puntos"}</div>
-          <div class="t-pos">Vas <b>${e.yo.posicion}.º</b> de ${e.jugadores}${e.yo.posicion > 1 ? ` · a ${e.yo.distancia} pts de ${esc(e.yo.detras_de.includes(",") ? e.yo.detras_de.split(",")[1].trim().split(" ")[0] : e.yo.detras_de.split(" ")[0])}` : " · ¡vas primero!"}</div>`
-        : `<div class="t-bloques">Tu equipo ganó <b>+${mio.ganados}</b> bloques${mio.bonus ? " (¡el más rápido!)" : ""}</div>`}
+        ${!r.califica ? "" : e.modo === "clasico" ? `<div class="t-bloques">${r.acerte ? `<b>+${r.puntos_ganados}</b> puntos${e.yo.racha >= 2 ? ` · 🔥 racha de ${e.yo.racha}` : ""}` : "Esta vez sin puntos"}</div>`
+          : `<div class="t-bloques">Tu equipo ganó <b>+${mio.ganados}</b> bloques${mio.bonus ? " (¡el más rápido!)" : ""}</div>`}
+        ${e.modo === "clasico" ? `<div class="t-pos">Vas <b>${e.yo.posicion}.º</b> de ${e.jugadores}${e.yo.posicion > 1 ? ` · a ${e.yo.distancia} pts de ${esc(e.yo.detras_de.includes(",") ? e.yo.detras_de.split(",")[1].trim().split(" ")[0] : e.yo.detras_de.split(" ")[0])}` : " · ¡vas primero!"}</div>` : ""}
         ${monoTxt ? `<div class="t-mono">${monoTxt}</div>` : ""}`);
       return programar(2000);
     }
