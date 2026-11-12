@@ -42,6 +42,7 @@
   .t-veredicto.bien { color: #4ade80; } .t-veredicto.mal { color: #f87171; }
   .t-expl { font-size: 14px; }
   .t-bloques { background: #0f1440; border-radius: 12px; padding: 12px; margin-top: 10px; font-size: 17px; }
+  .t-pos { background: #0f1440; border-radius: 12px; padding: 12px; margin-top: 10px; font-size: 16px; }
   .t-mono { background: #4a2a0a; border-radius: 12px; padding: 12px; margin-top: 10px; font-weight: 800; }
   .t-espera { font-size: 46px; text-align: center; margin: 10px 0; animation: tLatir 1.2s ease-in-out infinite alternate; }
   .t-ranking div { display: grid; grid-template-columns: 110px 1fr 40px; align-items: center; gap: 8px; margin: 8px 0; font-weight: 700; }
@@ -98,10 +99,11 @@ function elegir() {
   const previo = leer(`vivo.${codigo}`);
   const caja = $("#caja");
   const conLista = sala.alumnos.length > 0;
-  const equipos = sala.modo === "equipos";
-  caja.innerHTML = `<div class="marca">${equipos ? "🏗️ Torre por equipos" : sala.juego === "laberinto" ? "🧭 Laberinto del saber" : "🍄 Aventura pixel"}</div>
+  const equipos = sala.modo === "equipos", clasico = sala.modo === "clasico";
+  caja.innerHTML = `<div class="marca">${equipos ? "🏗️ Torre por equipos" : clasico ? "⚡ Quiz en vivo" : sala.juego === "laberinto" ? "🧭 Laberinto del saber" : "🍄 Aventura pixel"}</div>
     <h1>${esc(sala.titulo)}</h1>
-    <p>${equipos ? `${sala.n_preguntas} preguntas. Te toca un equipo: cada respuesta correcta suma bloques a la torre de tu equipo. ¡Cuidado con el mono!`
+    <p>${clasico ? `${sala.n_preguntas} preguntas. Mira cada pregunta en la pantalla del aula y responde en tu celular: más puntos si respondes rápido, y más aún si encadenas aciertos.`
+      : equipos ? `${sala.n_preguntas} preguntas. Te toca un equipo: cada respuesta correcta suma bloques a la torre de tu equipo. ¡Cuidado con el mono!`
       : `${sala.paquete.preguntas.length} preguntas · ${sala.vidas} vidas. Cada error, cada pregunta sin responder a tiempo y cada enemigo te quita una vida.`}</p>
     ${previo ? `<p>Ya entraste como <b>${esc(previo.nombre)}</b>.</p><button class="grande" id="seguir">▶ Jugar como ${esc(previo.nombre)}</button>
       <p class="nota">¿No eres tú? <a href="#" id="otro" style="color:#a5b4fc">Elegir otro nombre</a></p>` : conLista ? `
@@ -112,7 +114,7 @@ function elegir() {
       <button class="grande" id="unirme">¡A jugar!</button>`}
     <div id="msg"></div>`;
   if (previo) {
-    $("#seguir").onclick = () => (sala.modo === "equipos" ? empezarEquipos : empezar)(previo);
+    $("#seguir").onclick = () => (sala.modo === "equipos" || sala.modo === "clasico" ? empezarEquipos : empezar)(previo);
     $("#otro").onclick = (e) => { e.preventDefault(); guardar(`vivo.${codigo}`, null); elegir(); };
     return;
   }
@@ -133,7 +135,7 @@ function elegir() {
     try {
       const r = await nube("/vivo/unirse", conLista ? { codigo, alumno: elegido } : { codigo, apodo: $("#apodo").value });
       const yo = { token: r.token, nombre: r.nombre };
-      guardar(`vivo.${codigo}`, yo); (sala.modo === "equipos" ? empezarEquipos : empezar)(yo);
+      guardar(`vivo.${codigo}`, yo); (sala.modo === "equipos" || sala.modo === "clasico" ? empezarEquipos : empezar)(yo);
     } catch (e) { aviso(e.message); $("#unirme").disabled = false; if (conLista) { try { sala = await nube(`/vivo/sala?codigo=${codigo}`); pintar(); } catch (x) {} } }
   };
 }
@@ -163,9 +165,11 @@ function empezarEquipos(yo) {
   document.body.classList.add("modo-torre");
   let estado = null, temporizador = null, cuenta = null, enviando = false, ultimaClave = "";
   const pinta = (html) => { caja.innerHTML = html; };
+  const pila = esc(yo.nombre.includes(",") ? yo.nombre.split(",")[1].trim().split(" ")[0] : yo.nombre.split(" ")[0]);
   const cabecera = (e) => {
+    if (e.modo === "clasico") return `<div class="t-equipo" style="background:#3b2a9e"><span>${pila}</span><span style="float:right">${e.yo.puntos} pts</span></div>`;
     const eq = e.equipos[e.equipo] || { nombre: "", color: "#6366f1" };
-    return `<div class="t-equipo" style="background:${eq.color}">Equipo ${esc(eq.nombre)} · ${esc(yo.nombre.includes(",") ? yo.nombre.split(",")[1].trim().split(" ")[0] : yo.nombre.split(" ")[0])}</div>`;
+    return `<div class="t-equipo" style="background:${eq.color}">Equipo ${esc(eq.nombre)} · ${pila}</div>`;
   };
   const programar = (ms) => { clearTimeout(temporizador); temporizador = setTimeout(consultar, ms); };
   async function consultar() {
@@ -183,11 +187,15 @@ function empezarEquipos(yo) {
     if (clave === ultimaClave && e.fase !== "pregunta") return programar(2000);
     ultimaClave = clave; clearInterval(cuenta);
     if (e.fase === "lobby") {
-      pinta(`${cabecera(e)}<h1>¡Listo!</h1><p>Estás en el equipo <b>${esc(e.equipos[e.equipo].nombre)}</b>. Mira la pantalla del aula: el juego empieza cuando tu docente lo indique.</p><div class="t-espera">⏳</div>`);
+      pinta(`${cabecera(e)}<h1>¡Estás dentro!</h1><p>${e.modo === "clasico" ? "Busca tu nombre en la pantalla del aula." : `Estás en el equipo <b>${esc(e.equipos[e.equipo].nombre)}</b>. Mira la pantalla del aula.`} El juego empieza cuando tu docente lo indique.</p><div class="t-espera">⏳</div>`);
       return programar(2000);
     }
     if (e.fase === "pregunta") {
       const q = e.pregunta;
+      if (q.espera_ms > 0 && q.mi_opcion == null) {          // la pregunta se lee primero en la pantalla del aula
+        pinta(`${cabecera(e)}<div class="t-num">Pregunta ${e.indice + 1} de ${e.total}</div><h1>¡Prepárate!</h1><p>Lee la pregunta en la pantalla del aula.</p><div class="t-espera">👀</div>`);
+        ultimaClave = ""; return programar(q.espera_ms + 150);
+      }
       if (q.mi_opcion != null || q.restante_ms <= 0) {
         pinta(`${cabecera(e)}<div class="t-num">Pregunta ${e.indice + 1} de ${e.total}</div>
           ${q.mi_opcion != null ? `<h1>¡Respuesta enviada!</h1><div class="t-elegida" style="background:${COLORES[q.mi_opcion]}">${LETRAS[q.mi_opcion]}) ${esc(q.opciones[q.mi_opcion])}</div><p>Mira la pantalla: en un momento se revela la respuesta.</p>`
@@ -218,9 +226,18 @@ function empezarEquipos(yo) {
         <div class="t-veredicto ${r.acerte ? "bien" : "mal"}">${r.acerte ? "¡Correcto! 🎉" : r.mi_opcion == null ? "No respondiste" : "Incorrecto"}</div>
         <p>Respuesta correcta: <b>${LETRAS[r.correcta]}) ${esc(r.opciones[r.correcta])}</b></p>
         ${r.explicacion ? `<p class="t-expl">${esc(r.explicacion)}</p>` : ""}
-        <div class="t-bloques">Tu equipo ganó <b>+${mio.ganados}</b> bloques${mio.bonus ? " (¡el más rápido!)" : ""}</div>
+        ${e.modo === "clasico" ? `<div class="t-bloques">${r.acerte ? `<b>+${r.puntos_ganados}</b> puntos${e.yo.racha >= 2 ? ` · 🔥 racha de ${e.yo.racha}` : ""}` : "Esta vez sin puntos"}</div>
+          <div class="t-pos">Vas <b>${e.yo.posicion}.º</b> de ${e.jugadores}${e.yo.posicion > 1 ? ` · a ${e.yo.distancia} pts de ${esc(e.yo.detras_de.includes(",") ? e.yo.detras_de.split(",")[1].trim().split(" ")[0] : e.yo.detras_de.split(" ")[0])}` : " · ¡vas primero!"}</div>`
+        : `<div class="t-bloques">Tu equipo ganó <b>+${mio.ganados}</b> bloques${mio.bonus ? " (¡el más rápido!)" : ""}</div>`}
         ${monoTxt ? `<div class="t-mono">${monoTxt}</div>` : ""}`);
       return programar(2000);
+    }
+    if (e.fase === "final" && e.modo === "clasico") {
+      const p = e.yo.posicion;
+      pinta(`${cabecera(e)}<h1>${p === 1 ? "🏆 ¡Ganaste!" : p <= 3 ? `🥇🥈🥉 ¡Podio! Puesto ${p}` : `Quedaste en el puesto ${p}`}</h1>
+        <p>de ${e.jugadores} jugadores · <b>${e.yo.puntos}</b> puntos</p><p>Respuestas correctas: <b>${e.yo.aciertos} de ${e.total}</b>.</p>
+        <p class="nota">¡Gracias por jugar! Ya puedes cerrar esta página.</p>`);
+      return;
     }
     if (e.fase === "final") {
       const orden = e.equipos.map((x, i) => ({ ...x, i })).sort((a, b) => b.bloques - a.bloques);
