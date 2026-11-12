@@ -189,7 +189,7 @@ function empezarEquipos(yo) {
       const e = await nube(`/vivo/estado?token=${encodeURIComponent(yo.token)}`);
       estado = e; mostrar(e);
     } catch (err) {
-      if (/cerr/i.test(err.message)) return pinta(`<div class="marca">Torre por equipos</div><h1>El juego terminó</h1><p>${esc(err.message)}</p>`);
+      if (/cerr/i.test(err.message)) return pinta(`<div class="marca">Juego en vivo</div><h1>El juego terminó</h1><p>${esc(err.message)}</p>`);
       if (/vuelve a entrar/i.test(err.message)) { guardar(`vivo.${codigo}`, null); return pinta(`<h1>Tu sesión se cerró</h1><p>${esc(err.message)}</p><button class="grande" onclick="location.reload()">Volver a entrar</button>`); }
       aviso(err.message); programar(3000);
     }
@@ -197,7 +197,7 @@ function empezarEquipos(yo) {
   /* «A tu ritmo»: el servidor corrige al instante y devuelve el resultado de esa pregunta. */
   async function responderRitmo(datos, indice) {
     try { const r = await nube("/vivo/responder", { token: yo.token, indice, ...datos }); clearInterval(cuenta); enviando = false; mostrarRitmo(r.resultado); }
-    catch (err) { enviando = false; if (/ya se respondi/i.test(err.message)) { ultimaClave = ""; return consultar(); } throw err; }
+    catch (err) { enviando = false; if (/ya se respondi|abre la pregunta|cerr/i.test(err.message)) { ultimaClave = ""; return consultar(); } throw err; }
   }
   function correctaHtml(r, tipo) {
     if (tipo === "opcion" || tipo === "vf") return `<p>Respuesta correcta: <b>${LETRAS[r.correcta]}) ${esc(r.opciones[r.correcta])}</b></p>`;
@@ -289,7 +289,11 @@ function empezarEquipos(yo) {
           if (ritmo) return await responderRitmo(datos, e.indice);
           await nube("/vivo/responder", { token: yo.token, ...datos }); clearInterval(cuenta); enviando = false; consultar();
         }
-        catch (err) { aviso(err.message); enviando = false; caja.querySelectorAll("button, input, textarea").forEach((x) => (x.disabled = false)); }
+        catch (err) {
+          enviando = false;
+          if (/cerr/i.test(err.message)) { clearInterval(cuenta); return consultar(); }   // el docente cerró el juego: se muestra el aviso
+          aviso(err.message); caja.querySelectorAll("button, input, textarea").forEach((x) => (x.disabled = false));
+        }
       };
       if (q.opciones) caja.querySelector(".t-opciones").onclick = (ev) => { const b = ev.target.closest("button[data-k]"); if (b) enviar({ opcion: +b.dataset.k }, b); };
       const rango = $("#tRango"); if (rango) rango.oninput = () => ($("#tValor").textContent = rango.value);
