@@ -85,7 +85,10 @@ function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alPr
   const def = JUEGOS[clave];
   if (!def) throw new Error("Juego no disponible.");
   const limite = tiempo || def.tiempo || 45;
-  const preguntas = (mezclar ? barajar(paquete.preguntas) : paquete.preguntas).map((q) => {
+  // estos juegos usan preguntas de opciones (opción múltiple y verdadero/falso); los otros tipos son para el Quiz y la Torre en vivo
+  const deOpciones = (paquete.preguntas || []).filter((q) => (!q.tipo || q.tipo === "opcion" || q.tipo === "vf") && (q.opciones || []).length >= 2 && q.correcta >= 0);
+  if (!deOpciones.length) throw new Error("Este juego no tiene preguntas de opción múltiple o verdadero/falso (los otros tipos se juegan en el Quiz en vivo).");
+  const preguntas = (mezclar ? barajar(deOpciones) : deOpciones).map((q) => {
     // mezcla también las opciones (la correcta cambia de lugar en cada partida)
     const orden = mezclar ? barajar(q.opciones.map((_, i) => i)) : q.opciones.map((_, i) => i);
     return { ...q, opciones: orden.map((i) => q.opciones[i]), correcta: orden.indexOf(q.correcta) };
@@ -123,7 +126,9 @@ function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alPr
   };
   const pintarPregunta = () => {
     const q = preguntas[st.i];
-    $j(".juego-pregunta-texto").textContent = q.pregunta;
+    const img = q.imagen && paquete.baseImagen ? paquete.baseImagen + q.imagen : "";   // imagen de la pregunta (si la tiene)
+    $j(".juego-pregunta-texto").innerHTML = (img ? `<img class="juego-pregunta-img" src="${escJuego(img)}" alt="Imagen de la pregunta" title="Clic para ampliar">` : "")
+      + `<span>${escJuego(q.pregunta)}</span>`;
     $j(".juego-opciones").innerHTML = q.opciones.map((o, k) => `<div class="juego-opcion" data-k="${k}">
       <b style="background:${COLORES_OPCION[k]}">${LETRAS_OPCION[k]}</b><span>${escJuego(o)}</span></div>`).join("");
     pintarMarcador(); pintarReloj();
@@ -239,6 +244,12 @@ function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alPr
   const pantalla = () => { if (document.fullscreenElement) document.exitFullscreen(); else capa.requestFullscreen && capa.requestFullscreen().catch(() => {}); };
   window.addEventListener("keydown", teclas, true);
   capa.addEventListener("click", (e) => {
+    const grande = capa.querySelector(".juego-imagen-grande");
+    if (grande) { grande.remove(); return; }
+    if (e.target.classList.contains("juego-pregunta-img")) {     // ampliar la imagen (el reloj sigue corriendo)
+      const g = document.createElement("div"); g.className = "juego-imagen-grande"; g.title = "Clic para cerrar";
+      g.innerHTML = `<img src="${escJuego(e.target.getAttribute("src"))}" alt="Imagen de la pregunta">`; capa.appendChild(g); return;
+    }
     const b = e.target.closest("[data-j]"); if (!b) return;
     const a = b.dataset.j;
     if (a === "salir") cerrar();
