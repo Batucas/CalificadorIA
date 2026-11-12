@@ -53,35 +53,45 @@ function letraPixel(g, letra, x, y, color, tam = 1) {
   g.fillStyle = color;
   m.forEach((f, j) => [...f].forEach((b, i) => { if (b === "1") g.fillRect(x + i * tam, y + j * tam, tam, tam); }));
 }
-/* Ajusta el canvas a su caja con escala entera (píxeles nítidos). */
+/* Ajusta el canvas a su caja. Se dibuja en coordenadas del juego (ancho × alto) pero el lienzo real tiene la
+   resolución de la pantalla (escala entera): el pixel art sale nítido y los textos, legibles. */
 function ajustarLienzo(canvas, ancho, alto) {
   const caja = canvas.parentElement.getBoundingClientRect();
-  const k = Math.max(1, Math.floor(Math.min(caja.width / ancho, caja.height / alto) * 4) / 4);
-  canvas.width = ancho; canvas.height = alto;
-  canvas.style.width = `${ancho * k}px`; canvas.style.height = `${alto * k}px`;
-  const g = canvas.getContext("2d"); g.imageSmoothingEnabled = false;
+  const dpr = window.devicePixelRatio || 1;
+  const css = Math.max(0.5, Math.min(caja.width / ancho, caja.height / alto) || 1);   // ocupa todo el espacio disponible
+  const k = Math.max(1, Math.ceil(css * dpr));                                       // se dibuja al menos a la resolución mostrada
+  canvas.width = ancho * k; canvas.height = alto * k;
+  canvas.style.width = `${Math.floor(ancho * css)}px`; canvas.style.height = `${Math.floor(alto * css)}px`;
+  const g = canvas.getContext("2d");
+  g.setTransform(k, 0, 0, k, 0, 0); g.imageSmoothingEnabled = false;
   return g;
+}
+/* Texto legible dentro del lienzo (con sombra). */
+function textoJuego(g, s, x, y, tam, color, { alinear = "center", peso = 800, sombra = "rgba(10,12,40,.9)" } = {}) {
+  g.font = `${peso} ${tam}px "Segoe UI", system-ui, sans-serif`; g.textAlign = alinear; g.textBaseline = "middle";
+  if (sombra) { g.fillStyle = sombra; g.fillText(s, x + 0.6, y + 0.8); }
+  g.fillStyle = color; g.fillText(s, x, y);
 }
 
 /* ---------------------------------------------------------------- partida */
 function barajar(a) { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
-/* Partida completa. Opciones:
-   vidas      vidas iniciales (al perderlas todas el juego TERMINA; ya no hay «continuar» infinito)
-   saltarTras muertes en una misma pregunta que la dan por incorrecta y pasan a la siguiente
-   repetir    muestra «Jugar otra vez» al final · sinSalir oculta el botón ✕ (paquete para Moodle)
-   alProgreso(resultado) tras cada respuesta · alTerminar(resultado) una sola vez al terminar · alSalir(resultado) al cerrar */
-function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alProgreso = () => {}, mezclar = true, vidas = 3, saltarTras = 2,
+/* Partida completa. Reglas: cada respuesta equivocada (o pregunta sin responder a tiempo) quita una vida, igual que un
+   enemigo; sin vidas, el juego TERMINA y lo que faltaba cuenta como incorrecto.
+   Opciones: vidas · tiempo (segundos por pregunta; por defecto el del juego) · repetir («Jugar otra vez») ·
+   sinSalir (oculta ✕, paquete para Moodle) · alProgreso(r) tras cada respuesta · alTerminar(r) una vez · alSalir(r) */
+function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alProgreso = () => {}, mezclar = true, vidas = 3, tiempo = 0,
                                  repetir = true, sinSalir = false, mensajeFinal = "" } = {}) {
   const def = JUEGOS[clave];
   if (!def) throw new Error("Juego no disponible.");
+  const limite = tiempo || def.tiempo || 45;
   const preguntas = (mezclar ? barajar(paquete.preguntas) : paquete.preguntas).map((q) => {
     // mezcla también las opciones (la correcta cambia de lugar en cada partida)
     const orden = mezclar ? barajar(q.opciones.map((_, i) => i)) : q.opciones.map((_, i) => i);
     return { ...q, opciones: orden.map((i) => q.opciones[i]), correcta: orden.indexOf(q.correcta) };
   });
   const st = { i: 0, puntos: 0, vidas, vidasMax: vidas, aciertos: 0, respuestas: [], esperando: false, pausado: false,
-               respondida: false, muertes: 0, terminado: false, inicio: Date.now(), tPregunta: Date.now() };
+               respondida: false, terminado: false, restante: limite, relojActivo: true, tPregunta: Date.now() };
   const capa = document.createElement("div");
   capa.className = "juego-capa";
   capa.innerHTML = `
@@ -92,7 +102,7 @@ function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alPr
         <button data-j="sonido" title="Sonido">🔊</button><button data-j="pausa" title="Pausa (P)">⏸</button>
         <button data-j="pantalla" title="Pantalla completa (F)">⛶</button>${sinSalir ? "" : `<button data-j="salir" title="Salir (Esc)">✕</button>`}</div>
     </div>
-    <div class="juego-pregunta"></div>
+    <div class="juego-pregunta"><div class="juego-pregunta-texto"></div><div class="juego-reloj"><i></i><span></span></div></div>
     <div class="juego-cuerpo"><div class="juego-lienzo"><canvas></canvas><div class="juego-mando"></div></div><div class="juego-opciones"></div></div>
     <div class="juego-aviso oculto"></div>`;
   document.body.appendChild(capa);
@@ -104,38 +114,47 @@ function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alPr
     $j(".juego-puntos").textContent = `${st.puntos} pts`;
     $j(".juego-progreso").textContent = `${Math.min(st.i + 1, preguntas.length)} / ${preguntas.length}`;
   };
+  const pintarReloj = () => {
+    const f = Math.max(0, st.restante / limite);
+    const barra = $j(".juego-reloj i");
+    barra.style.width = `${f * 100}%`;
+    barra.className = f < 0.25 ? "urgente" : "";
+    $j(".juego-reloj span").textContent = st.respondida ? "" : `${Math.ceil(st.restante)} s`;
+  };
   const pintarPregunta = () => {
     const q = preguntas[st.i];
-    $j(".juego-pregunta").textContent = q.pregunta;
+    $j(".juego-pregunta-texto").textContent = q.pregunta;
     $j(".juego-opciones").innerHTML = q.opciones.map((o, k) => `<div class="juego-opcion" data-k="${k}">
       <b style="background:${COLORES_OPCION[k]}">${LETRAS_OPCION[k]}</b><span>${escJuego(o)}</span></div>`).join("");
-    pintarMarcador();
+    pintarMarcador(); pintarReloj();
   };
   const mostrarAviso = (html, clase, ms) => new Promise((ok) => {
     aviso.className = `juego-aviso ${clase}`; aviso.innerHTML = html;
     if (ms) setTimeout(() => { aviso.className = "juego-aviso oculto"; ok(); }, ms);
     else ok();
   });
-  /* Registra la respuesta (k = null: pregunta perdida) y muestra la explicación. */
-  const registrar = (k, saltada) => {
+  /* Registra la respuesta (k = null: se acabó el tiempo). Equivocarse quita una vida. */
+  const registrar = (k, motivo) => {
     const q = preguntas[st.i], bien = k === q.correcta;
-    const segundos = (Date.now() - st.tPregunta) / 1000;
     st.esperando = true; st.respondida = true;
-    st.respuestas.push({ pregunta: q.pregunta, elegida: k == null ? null : q.opciones[k], correcta: q.opciones[q.correcta], bien, saltada: !!saltada, explicacion: q.explicacion });
+    st.respuestas.push({ pregunta: q.pregunta, elegida: k == null ? null : q.opciones[k], correcta: q.opciones[q.correcta], bien,
+                         sinTiempo: motivo === "tiempo", explicacion: q.explicacion });
     capa.querySelectorAll(".juego-opcion").forEach((el) => el.classList.add(+el.dataset.k === q.correcta ? "es-correcta" : +el.dataset.k === k ? "es-error" : "apagada"));
-    if (bien) { st.aciertos++; st.puntos += 100 + Math.max(0, Math.round(50 - segundos * 2)); Sonido.correcto(); }
-    else Sonido.error();
-    pintarMarcador();
+    if (bien) { st.aciertos++; st.puntos += 100 + Math.round(50 * Math.max(0, st.restante) / limite); Sonido.correcto(); }
+    else { st.vidas = Math.max(0, st.vidas - 1); Sonido.error(); }
+    pintarMarcador(); pintarReloj();
     try { alProgreso(resultado()); } catch (e) { console.error(e); }
-    const titulo = bien ? "¡Correcto! 🎉" : saltada ? "Pregunta perdida 😵" : "Casi… ❌";
+    const sinVidas = st.vidas <= 0;
+    const titulo = bien ? "¡Correcto! 🎉" : motivo === "tiempo" ? "⏰ ¡Se acabó el tiempo!" : "Incorrecto ❌";
     mostrarAviso(`<div class="juego-aviso-caja"><div class="juego-aviso-titulo">${titulo}</div>
-      ${saltada ? `<div>Perdiste ${saltarTras} vidas en esta pregunta: cuenta como incorrecta.</div>` : ""}
+      ${bien ? "" : `<div class="juego-aviso-vida">−1 ♥ ${sinVidas ? "· ¡Sin vidas!" : `· te quedan ${st.vidas}`}</div>`}
       ${bien ? "" : `<div>La respuesta correcta era: <b>${LETRAS_OPCION[q.correcta]}) ${escJuego(q.opciones[q.correcta])}</b></div>`}
       ${q.explicacion ? `<div class="juego-aviso-expl">${escJuego(q.explicacion)}</div>` : ""}</div>`, bien ? "bien" : "mal", bien ? 2000 : 4200)
       .then(() => {
         if (st.terminado) return;
+        if (sinVidas) return terminar("vidas");
         st.esperando = false;
-        // los juegos con «bandera» abren la meta y avisan con ctx.siguiente(); los demás pasan solos
+        // los juegos con «meta» (plataformas) la abren y avisan con ctx.siguiente(); los demás pasan solos
         if (def.bandera && juego.trasResponder) juego.trasResponder(bien);
         else siguiente();
       });
@@ -148,34 +167,44 @@ function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alPr
     sumar(n) { st.puntos += n; pintarMarcador(); },
     vidas: () => st.vidas,
     ganarVida() { st.vidas = Math.min(st.vidasMax + 2, st.vidas + 1); pintarMarcador(); },
-    reiniciarReloj() { st.tPregunta = Date.now(); },
+    /* El juego puede detener el reloj (pantalla de elegir personaje) y reiniciarlo al empezar. */
+    reiniciarReloj() { st.restante = limite; st.relojActivo = true; st.tPregunta = Date.now(); capa.classList.remove("sin-pregunta"); pintarReloj(); },
+    // antes de empezar (elegir personaje) la pregunta queda oculta y el reloj quieto: nadie la lee con ventaja
+    detenerReloj() { st.relojActivo = false; capa.classList.add("sin-pregunta"); },
+    pregunta: () => preguntas[st.i],
     /* El juego avisa la opción elegida; devuelve si fue correcta. */
     responder(k) {
       if (st.esperando || st.respondida || st.terminado || st.i >= preguntas.length) return null;
-      return registrar(k, false);
+      return registrar(k, null);
     },
-    /* El jugador perdió una vida (enemigo, caída…). Sin vidas, el juego termina. */
+    /* Un enemigo, una caída… quitan una vida. Sin vidas, el juego termina. */
     perderVida() {
       if (st.esperando || st.terminado) return;
       st.vidas--; Sonido.golpe(); pintarMarcador();
-      if (st.vidas <= 0) { st.esperando = true; setTimeout(() => terminar("vidas"), 700); return; }
-      if (!st.respondida && ++st.muertes >= saltarTras) registrar(null, true);
+      if (st.vidas <= 0) { st.esperando = true; setTimeout(() => terminar("vidas"), 900); }
     },
-    /* Para juegos con bandera: el jugador llegó a la meta → siguiente pregunta. */
+    /* Juegos con meta: el jugador llegó → siguiente pregunta. */
     siguiente() { if (st.respondida && !st.esperando && !st.terminado) siguiente(); },
   };
 
   let juego;
+  const reloj = setInterval(() => {
+    // la pausa NO detiene el reloj (si no, se podría pausar para leer con calma); solo lo detienen los avisos de respuesta
+    if (st.terminado || st.respondida || st.esperando || !st.relojActivo) return;
+    st.restante -= 0.1; pintarReloj();
+    if (st.restante <= 0) registrar(null, "tiempo");
+  }, 100);
   const siguiente = () => {
-    st.i++; st.esperando = false; st.respondida = false; st.muertes = 0;
+    st.i++; st.esperando = false; st.respondida = false;
     if (st.i >= preguntas.length) return terminar("fin");
-    st.tPregunta = Date.now(); pintarPregunta(); juego.ronda(preguntas[st.i].opciones.length, { indice: st.i, total: preguntas.length });
+    st.restante = limite; st.tPregunta = Date.now(); pintarPregunta();
+    juego.ronda(preguntas[st.i].opciones.length, { indice: st.i, total: preguntas.length });
   };
   const resultado = () => ({ puntos: st.puntos, aciertos: st.aciertos, total: preguntas.length, respondidas: st.respuestas.filter((x) => !x.sinResponder).length,
     nota: Math.round(100 * st.aciertos / Math.max(1, preguntas.length)), respuestas: st.respuestas, terminado: st.terminado });
   const terminar = (motivo) => {
     if (st.terminado) return;
-    st.terminado = true; st.esperando = true; Sonido.fin();
+    st.terminado = true; st.esperando = true; clearInterval(reloj); Sonido.fin();
     // las preguntas que no alcanzó a responder cuentan como incorrectas
     for (let n = st.respuestas.length; n < preguntas.length; n++) {
       const q = preguntas[n];
@@ -188,18 +217,18 @@ function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alPr
       <div class="juego-final-cifras"><div><b>${st.puntos}</b><span>puntos</span></div><div><b>${st.aciertos}/${preguntas.length}</b><span>aciertos</span></div><div><b>${r.nota}</b><span>nota sobre 100</span></div></div>
       ${mensajeFinal ? `<div class="juego-aviso-expl" style="margin:0 0 10px">${mensajeFinal}</div>` : ""}
       <div class="juego-final-lista">${st.respuestas.map((x, n) => `<div class="${x.bien ? "ok" : "no"}"><b>${x.bien ? "✔" : "✘"} ${n + 1}.</b> ${escJuego(x.pregunta)}
-        <small>Respuesta: ${escJuego(x.correcta)}${x.bien ? "" : x.sinResponder ? " · sin responder" : x.saltada ? " · perdida (2 vidas en esa pregunta)" : ` · elegida: ${escJuego(x.elegida || "—")}`}</small></div>`).join("")}</div>
+        <small>Respuesta: ${escJuego(x.correcta)}${x.bien ? "" : x.sinResponder ? " · sin responder (se acabaron las vidas)" : x.sinTiempo ? " · se acabó el tiempo" : ` · elegida: ${escJuego(x.elegida || "—")}`}</small></div>`).join("")}</div>
       <div class="juego-aviso-botones">${repetir ? `<button data-j="otra">Jugar otra vez</button>` : ""}${sinSalir ? "" : `<button data-j="salir">Salir</button>`}</div></div>`, "final");
   };
+  const quitar = () => { clearInterval(reloj); juego && juego.destruir(); window.removeEventListener("keydown", teclas, true); capa.remove(); };
   const cerrar = () => {
-    juego && juego.destruir(); window.removeEventListener("keydown", teclas, true);
     if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
-    capa.remove(); alSalir(resultado());
+    quitar(); alSalir(resultado());
   };
   const pausar = (b) => {
     if (st.terminado) return;
     st.pausado = b; $j('[data-j="pausa"]').textContent = b ? "▶" : "⏸";
-    if (b && !st.esperando) mostrarAviso(`<div class="juego-aviso-caja"><div class="juego-aviso-titulo">⏸ Pausa</div><div>Pulsa P o ▶ para seguir.</div></div>`, "pausa");
+    if (b && !st.esperando) mostrarAviso(`<div class="juego-aviso-caja"><div class="juego-aviso-titulo">⏸ Pausa</div><div>El tiempo de la pregunta sigue corriendo.</div><div>Pulsa P o ▶ para seguir.</div></div>`, "pausa");
     else if (!b && aviso.classList.contains("pausa")) aviso.className = "juego-aviso oculto";
   };
   const teclas = (e) => {
@@ -216,8 +245,7 @@ function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alPr
     else if (a === "pausa") pausar(!st.pausado);
     else if (a === "pantalla") pantalla();
     else if (a === "sonido") { Sonido.activo = !Sonido.activo; b.textContent = Sonido.activo ? "🔊" : "🔇"; }
-    else if (a === "otra") { juego && juego.destruir(); window.removeEventListener("keydown", teclas, true); capa.remove();
-      jugar(paquete, clave, { alSalir, alTerminar, alProgreso, mezclar, vidas, saltarTras, repetir, sinSalir, mensajeFinal }); }
+    else if (a === "otra") { quitar(); jugar(paquete, clave, { alSalir, alTerminar, alProgreso, mezclar, vidas, tiempo, repetir, sinSalir, mensajeFinal }); }
   });
 
   pintarPregunta();

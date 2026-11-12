@@ -53,3 +53,16 @@
   .juego-opcion { padding: 8px; }
   .juego-marcador { gap: 10px; font-size: 15px; }
 }
+/* Tiempo por pregunta y aviso de vida perdida */
+.juego-reloj { position: relative; height: 10px; margin: 10px auto 0; max-width: 720px; border-radius: 6px; background: rgba(255,255,255,.12); overflow: hidden; }
+.juego-reloj i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #22c55e, #84cc16); transition: width .1s linear; }
+.juego-reloj i.urgente { background: linear-gradient(90deg, #ef4444, #f97316); animation: juegoLatido .6s ease-in-out infinite alternate; }
+.juego-reloj span { position: absolute; right: 6px; top: -1px; font-size: 9px; font-weight: 800; line-height: 12px; color: #fff; text-shadow: 0 1px 2px #000; }
+.juego-aviso-vida { color: #dc2626; font-weight: 900; font-size: 1.1em; margin-bottom: 6px; }
+.juego-lienzo canvas { image-rendering: auto; }
+@keyframes juegoLatido { from { opacity: .65; } to { opacity: 1; } }
+/* Antes de empezar (elegir personaje) la pregunta y las opciones no se ven */
+.juego-capa.sin-pregunta .juego-pregunta-texto, .juego-capa.sin-pregunta .juego-opciones { visibility: hidden; }
+.juego-capa.sin-pregunta .juego-pregunta::before { content: "La pregunta aparecerá al empezar"; display: block; font-size: .7em; color: #a5b4fc; }
+.juego-capa.sin-pregunta .juego-pregunta { position: relative; }
+.juego-capa.sin-pregunta .juego-pregunta-texto { position: absolute; }
