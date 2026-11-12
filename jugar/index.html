@@ -181,7 +181,7 @@ function empezarEquipos(yo) {
   const cabecera = (e) => {
     if (e.modo === "clasico" || e.modo === "ritmo") return `<div class="t-equipo" style="background:#3b2a9e"><span>${pila}</span><span style="float:right">${e.yo.puntos} pts</span></div>`;
     const eq = e.equipos[e.equipo] || { nombre: "", color: "#6366f1" };
-    return `<div class="t-equipo" style="background:${eq.color}">Equipo ${esc(eq.nombre)} · ${pila}</div>`;
+    return `<div class="t-equipo" style="background:${eq.color}">${eq.icono || ""} Equipo ${esc(eq.nombre)} · ${pila}</div>`;
   };
   const programar = (ms) => { clearTimeout(temporizador); temporizador = setTimeout(consultar, ms); };
   async function consultar() {
@@ -220,11 +220,13 @@ function empezarEquipos(yo) {
   }
   function mostrar(e) {
     const ritmo = e.modo === "ritmo";
-    const clave = ritmo ? `${e.fase}:${e.indice}:${e.terminado}:${e.yo.posicion}:${e.yo.puntos}:${e.jugadores}` : `${e.fase}:${e.indice}:${e.pregunta && e.pregunta.respondida}`;
+    const eqv = (e.equipos || [])[e.equipo];
+    const clave = ritmo ? `${e.fase}:${e.indice}:${e.terminado}:${e.yo.posicion}:${e.yo.puntos}:${e.jugadores}`
+      : `${e.fase}:${e.indice}:${e.pregunta && e.pregunta.respondida}:${e.equipo}:${eqv ? eqv.nombre : ""}`;
     if (clave === ultimaClave && e.fase !== "pregunta") return programar(2000);
     ultimaClave = clave; clearInterval(cuenta);
     if (e.fase === "lobby") {
-      pinta(`${cabecera(e)}<h1>¡Estás dentro!</h1><p>${e.modo === "ritmo" ? "Busca tu nombre en la pantalla del aula. Cuando tu docente empiece, las preguntas aparecerán aquí." : e.modo === "clasico" ? "Busca tu nombre en la pantalla del aula." : `Estás en el equipo <b>${esc(e.equipos[e.equipo].nombre)}</b>. Mira la pantalla del aula.`} El juego empieza cuando tu docente lo indique.</p><div class="t-espera">⏳</div>`);
+      pinta(`${cabecera(e)}<h1>¡Estás dentro!</h1><p>${e.modo === "ritmo" ? "Busca tu nombre en la pantalla del aula. Cuando tu docente empiece, las preguntas aparecerán aquí." : e.modo === "clasico" ? "Busca tu nombre en la pantalla del aula." : `Estás en el equipo <b>${e.equipos[e.equipo].icono || ""} ${esc(e.equipos[e.equipo].nombre)}</b>. Mira la pantalla del aula.`} El juego empieza cuando tu docente lo indique.</p><div class="t-espera">⏳</div>`);
       return programar(2000);
     }
     if (ritmo && e.fase === "jugando" && e.terminado) {
@@ -337,7 +339,7 @@ function empezarEquipos(yo) {
       const max = Math.max(1, ...orden.map((x) => x.bloques));
       const pos = orden.findIndex((x) => x.i === e.equipo) + 1;
       pinta(`${cabecera(e)}<h1>${pos === 1 ? "🏆 ¡Tu equipo ganó!" : `Tu equipo quedó en el puesto ${pos}`}</h1>
-        <div class="t-ranking">${orden.map((x, n) => `<div><span>${n + 1}. ${esc(x.nombre)}</span><i style="width:${Math.round(100 * x.bloques / max)}%;background:${x.color}"></i><b>${x.bloques}</b></div>`).join("")}</div>
+        <div class="t-ranking">${orden.map((x, n) => `<div><span>${n + 1}. ${x.icono || ""} ${esc(x.nombre)}</span><i style="width:${Math.round(100 * x.bloques / max)}%;background:${x.color}"></i><b>${x.bloques}</b></div>`).join("")}</div>
         <p>Tus respuestas correctas: <b>${e.yo.aciertos} de ${e.yo.con_nota || e.total}</b>.</p><p class="nota">¡Gracias por jugar! Ya puedes cerrar esta página.</p>`);
       return;
     }
