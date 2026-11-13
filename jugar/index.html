@@ -53,6 +53,12 @@
   .t-escala input { width: 100%; height: 36px; accent-color: #fde047; }
   .t-escala-lim { display: flex; justify-content: space-between; font-size: 14px; color: var(--suave); }
   .t-pos { background: #0f1440; border-radius: 12px; padding: 12px; margin-top: 10px; font-size: 16px; }
+  .t-apuesta { display: flex; align-items: center; gap: 8px; margin: -4px 0 12px; flex-wrap: wrap; }
+  .t-apuesta span { font-weight: 800; color: #fde047; flex: 1 0 100%; }
+  .t-apuesta button { flex: 1; border: 2px solid #6366f1; background: #0f1440; color: #fff; border-radius: 12px; padding: 10px; font: inherit; font-size: 20px; font-weight: 900; cursor: pointer; }
+  .t-apuesta button.sel { background: #fde047; color: #1b1f5e; border-color: #fde047; }
+  .t-cofre { display: flex; gap: 12px; align-items: center; background: #3a2a06; border: 2px solid #ca8a04; border-radius: 12px; padding: 12px; margin-top: 10px; animation: tLatir .6s ease-in-out 2 alternate; }
+  .t-cofre span { font-size: 40px; }
   .t-mono { background: #4a2a0a; border-radius: 12px; padding: 12px; margin-top: 10px; font-weight: 800; }
   .t-espera { font-size: 46px; text-align: center; margin: 10px 0; animation: tLatir 1.2s ease-in-out infinite alternate; }
   .t-ranking div { display: grid; grid-template-columns: 110px 1fr 40px; align-items: center; gap: 8px; margin: 8px 0; font-weight: 700; }
@@ -105,17 +111,27 @@ async function buscar() {
   $("#buscar") && ($("#buscar").disabled = false);
 }
 
-const DIRIGIDOS = ["equipos", "clasico", "ritmo"];   // el servidor corrige (Torre, Quiz en vivo y A tu ritmo)
+const DIRIGIDOS = ["equipos", "clasico", "ritmo", "carrera", "apuesta", "cofres", "mapa", "mural"];   // el servidor corrige
+const EN_EQUIPOS = ["equipos", "mapa"];
+// cómo se presenta cada juego al entrar: marca y explicación (n = número de preguntas)
+const MODOS = {
+  clasico: ["⚡ Quiz en vivo", (n) => `${n} preguntas. Mira cada pregunta en la pantalla del aula y responde en tu celular: más puntos si respondes rápido, y más aún si encadenas aciertos.`],
+  equipos: ["🏗️ Torre por equipos", (n) => `${n} preguntas. Te toca un equipo: cada respuesta correcta suma bloques a la torre de tu equipo. ¡Cuidado con el mono!`],
+  ritmo: ["🏃 A tu ritmo", (n) => `${n} preguntas. Respondes en tu celular y avanzas a tu ritmo: después de cada respuesta ves si acertaste. ¡Llega a la meta con la mayor cantidad de puntos!`],
+  carrera: ["🏁 Gran carrera", (n) => `${n} preguntas. Cada respuesta correcta hace avanzar tu auto en la pista de la pantalla del aula. ¡Llega primero a la meta!`],
+  apuesta: ["🎲 Apuesta segura", (n) => `${n} preguntas. Antes de responder eliges cuánto apostar: ×1, ×2 o ×3. Si aciertas, multiplicas tus puntos; si fallas, pierdes 300 por ficha. Apuesta fuerte solo si estás seguro.`],
+  cofres: ["🎁 Cofres del saber", (n) => `${n} preguntas. Cada vez que aciertas abres un cofre sorpresa: oro, tesoro, puntos dobles… ¡o un robo al que va delante!`],
+  mapa: ["🗺️ Conquista del mapa", (n) => `${n} preguntas. Te toca un equipo: cada acierto conquista casillas del mapa para tu equipo, y cuando no quedan libres se las quitan al vecino.`],
+  mural: ["🖼️ Mural de la clase", (n) => `${n} preguntas. Toda la clase juega junta: cada acierto descubre piezas de una imagen secreta en la pantalla del aula.`],
+};
 function elegir() {
   const previo = leer(`vivo.${codigo}`);
   const caja = $("#caja");
   const conLista = sala.alumnos.length > 0;
-  const equipos = sala.modo === "equipos", clasico = sala.modo === "clasico", ritmo = sala.modo === "ritmo";
-  caja.innerHTML = `<div class="marca">${equipos ? "🏗️ Torre por equipos" : clasico ? "⚡ Quiz en vivo" : ritmo ? "🏃 A tu ritmo" : sala.juego === "laberinto" ? "🧭 Laberinto del saber" : "🍄 Aventura pixel"}</div>
+  const md = MODOS[sala.modo];
+  caja.innerHTML = `<div class="marca">${md ? md[0] : sala.juego === "laberinto" ? "🧭 Laberinto del saber" : "🍄 Aventura pixel"}</div>
     <h1>${esc(sala.titulo)}</h1>
-    <p>${ritmo ? `${sala.n_preguntas} preguntas. Respondes en tu celular y avanzas a tu ritmo: después de cada respuesta ves si acertaste. ¡Llega a la meta con la mayor cantidad de puntos!`
-      : clasico ? `${sala.n_preguntas} preguntas. Mira cada pregunta en la pantalla del aula y responde en tu celular: más puntos si respondes rápido, y más aún si encadenas aciertos.`
-      : equipos ? `${sala.n_preguntas} preguntas. Te toca un equipo: cada respuesta correcta suma bloques a la torre de tu equipo. ¡Cuidado con el mono!`
+    <p>${md ? md[1](sala.n_preguntas)
       : `${sala.paquete.preguntas.length} preguntas · ${sala.vidas} vidas. Cada error, cada pregunta sin responder a tiempo y cada enemigo te quita una vida.`}</p>
     ${previo ? `<p>Ya entraste como <b>${esc(previo.nombre)}</b>.</p><button class="grande" id="seguir">▶ Jugar como ${esc(previo.nombre)}</button>
       <p class="nota">¿No eres tú? <a href="#" id="otro" style="color:#a5b4fc">Elegir otro nombre</a></p>` : conLista ? `
@@ -175,11 +191,12 @@ const COLORES = ["#e5484d", "#3b82f6", "#f5b400", "#22a55b"], LETRAS = ["A", "B"
 function empezarEquipos(yo) {
   const caja = $("#caja");
   document.body.classList.add("modo-torre");
-  let estado = null, temporizador = null, cuenta = null, enviando = false, ultimaClave = "";
+  let estado = null, temporizador = null, cuenta = null, enviando = false, ultimaClave = "", apuesta = 1, ultimaApuesta = -1;
+  const primerNombre = (n) => esc(n.includes(",") ? n.split(",")[1].trim().split(" ")[0] : n.split(" ")[0]);
   const pinta = (html) => { caja.innerHTML = html; };
   const pila = esc(yo.nombre.includes(",") ? yo.nombre.split(",")[1].trim().split(" ")[0] : yo.nombre.split(" ")[0]);
   const cabecera = (e) => {
-    if (e.modo === "clasico" || e.modo === "ritmo") return `<div class="t-equipo" style="background:#3b2a9e"><span>${pila}</span><span style="float:right">${e.yo.puntos} pts</span></div>`;
+    if (!EN_EQUIPOS.includes(e.modo)) return `<div class="t-equipo" style="background:#3b2a9e"><span>${pila}</span><span style="float:right">${e.yo.puntos} pts</span></div>`;
     const eq = e.equipos[e.equipo] || { nombre: "", color: "#6366f1" };
     return `<div class="t-equipo" style="background:${eq.color}">${eq.icono || ""} Equipo ${esc(eq.nombre)} · ${pila}</div>`;
   };
@@ -218,6 +235,22 @@ function empezarEquipos(yo) {
       <button class="grande" id="tSiguiente">${r.ultima ? "🏁 Ver mi resultado" : "Siguiente ▶"}</button>`);
     $("#tSiguiente").onclick = () => { $("#tSiguiente").disabled = true; consultar(); };
   }
+  /* Puntos de la pregunta (modos individuales); en «Apuesta segura», con la apuesta. */
+  function puntosHtml(e, r) {
+    const ap = r.mi_respuesta && r.mi_respuesta.apuesta, racha = e.yo.racha >= 2 ? ` · 🔥 racha de ${e.yo.racha}` : "";
+    if (r.acerte) return `<div class="t-bloques"><b>+${r.puntos_ganados}</b> puntos${ap ? ` (apostaste ×${ap})` : ""}${racha}</div>`;
+    if (r.puntos_ganados < 0) return `<div class="t-bloques">Perdiste <b>${-r.puntos_ganados}</b> puntos (apostaste ×${ap})</div>`;
+    return `<div class="t-bloques">Esta vez sin puntos</div>`;
+  }
+  /* Cofres del saber: el cofre que le tocó y si alguien le robó. */
+  const COFRE = { oro: ["💰", "¡Cofre de oro!"], tesoro: ["💎", "¡Encontraste un tesoro!"], doble: ["✨", "¡Puntos dobles!"], robo: ["🦝", "¡Robo!"], vacio: ["🕸️", "Cofre vacío…"] };
+  function cofreHtml(r) {
+    let h = "";
+    const c = r.mi_cofre;
+    if (c) h += `<div class="t-cofre"><span>${COFRE[c.tipo][0]}</span><div><b>${COFRE[c.tipo][1]}</b><br>${c.tipo === "vacio" ? "Esta vez no trajo nada." : c.tipo === "robo" ? `Le quitaste <b>${c.puntos}</b> puntos a ${primerNombre(c.victima_nombre)}.` : `<b>+${c.puntos}</b> puntos extra.`}</div></div>`;
+    (r.me_robaron || []).forEach((x) => { h += `<div class="t-mono">🦝 ${primerNombre(x.nombre)} te robó ${x.puntos} puntos.</div>`; });
+    return h;
+  }
   function mostrar(e) {
     const ritmo = e.modo === "ritmo";
     const eqv = (e.equipos || [])[e.equipo];
@@ -226,7 +259,7 @@ function empezarEquipos(yo) {
     if (clave === ultimaClave && e.fase !== "pregunta") return programar(2000);
     ultimaClave = clave; clearInterval(cuenta);
     if (e.fase === "lobby") {
-      pinta(`${cabecera(e)}<h1>¡Estás dentro!</h1><p>${e.modo === "ritmo" ? "Busca tu nombre en la pantalla del aula. Cuando tu docente empiece, las preguntas aparecerán aquí." : e.modo === "clasico" ? "Busca tu nombre en la pantalla del aula." : `Estás en el equipo <b>${e.equipos[e.equipo].icono || ""} ${esc(e.equipos[e.equipo].nombre)}</b>. Mira la pantalla del aula.`} El juego empieza cuando tu docente lo indique.</p><div class="t-espera">⏳</div>`);
+      pinta(`${cabecera(e)}<h1>¡Estás dentro!</h1><p>${e.modo === "ritmo" ? "Busca tu nombre en la pantalla del aula. Cuando tu docente empiece, las preguntas aparecerán aquí." : !EN_EQUIPOS.includes(e.modo) ? "Busca tu nombre en la pantalla del aula." : `Estás en el equipo <b>${e.equipos[e.equipo].icono || ""} ${esc(e.equipos[e.equipo].nombre)}</b>. Mira la pantalla del aula.`} El juego empieza cuando tu docente lo indique.</p><div class="t-espera">⏳</div>`);
       return programar(2000);
     }
     if (ritmo && e.fase === "jugando" && e.terminado) {
@@ -253,7 +286,7 @@ function empezarEquipos(yo) {
           : m.orden ? `<ol class="t-orden-ver">${m.orden.map((id) => `<li>${esc((q.elementos.find((x) => x.id === id) || {}).texto || "")}</li>`).join("")}</ol>`
           : m.valor != null ? `<div class="t-elegida" style="background:#3b2a9e">${m.valor} ${esc(q.escala.unidad || "")}</div>` : "";
         pinta(`${cabecera(e)}<div class="t-num">Pregunta ${e.indice + 1} de ${e.total}</div>
-          ${q.respondida ? `<h1>¡Respuesta enviada!</h1>${enviada}<p>Mira la pantalla: en un momento se revela.</p>` : `<h1>⏰ Se acabó el tiempo</h1><p>Espera la siguiente pregunta.</p>`}`);
+          ${q.respondida ? `<h1>¡Respuesta enviada!</h1>${enviada}${m.apuesta ? `<p>Apostaste <b>×${m.apuesta}</b>. 🤞</p>` : ""}<p>Mira la pantalla: en un momento se revela.</p>` : `<h1>⏰ Se acabó el tiempo</h1><p>Espera la siguiente pregunta.</p>`}`);
         return programar(2000);
       }
       const fin = Date.now() + (q.restante_ms || 0);
@@ -277,8 +310,15 @@ function empezarEquipos(yo) {
             <div class="t-escala-lim"><span>${es.min}</span><span>${es.max}</span></div></div>
           <button class="grande" id="tEnviar">Enviar</button>`;
       }
+      const conApuesta = e.modo === "apuesta" && ["opcion", "vf", "escribir", "ordenar", "escala"].includes(tipo);
+      if (conApuesta && ultimaApuesta !== e.indice) { apuesta = 1; ultimaApuesta = e.indice; }
       pinta(`${cabecera(e)}<div class="t-num">Pregunta ${e.indice + 1} de ${e.total} · <span id="tRest"></span></div>
-        <div class="t-pregunta">${esc(q.texto)}</div>${entrada}<div id="msg"></div>`);
+        <div class="t-pregunta">${esc(q.texto)}</div>
+        ${conApuesta ? `<div class="t-apuesta" id="tApuesta"><span>¿Cuánto apuestas?</span>${[1, 2, 3].map((a) => `<button data-ap="${a}" class="${a === apuesta ? "sel" : ""}">×${a}</button>`).join("")}</div>` : ""}
+        ${entrada}<div id="msg"></div>`);
+      const cajaAp = $("#tApuesta");
+      if (cajaAp) cajaAp.onclick = (ev) => { const b = ev.target.closest("button[data-ap]"); if (!b || b.disabled) return; apuesta = +b.dataset.ap;
+        cajaAp.querySelectorAll("button").forEach((x) => x.classList.toggle("sel", x === b)); };
       const pintarRestante = () => { const r = Math.max(0, Math.ceil((fin - Date.now()) / 1000)); const el = $("#tRest"); if (el) el.textContent = `${r} s`;
         if (r <= 0) { clearInterval(cuenta); if (ritmo) responderRitmo({ saltar: true }, e.indice).catch(() => consultar()); else consultar(); } };
       if (sinLimite) $("#tRest").textContent = "sin límite de tiempo"; else { pintarRestante(); cuenta = setInterval(pintarRestante, 250); }
@@ -287,7 +327,7 @@ function empezarEquipos(yo) {
         enviando = true; caja.querySelectorAll("button, input, textarea").forEach((x) => (x.disabled = true)); if (boton) boton.classList.add("sel");
         try {
           if (ritmo) return await responderRitmo(datos, e.indice);
-          await nube("/vivo/responder", { token: yo.token, ...datos }); clearInterval(cuenta); enviando = false; consultar();
+          await nube("/vivo/responder", { token: yo.token, ...datos, ...(conApuesta ? { apuesta } : {}) }); clearInterval(cuenta); enviando = false; consultar();
         }
         catch (err) {
           enviando = false;
@@ -325,13 +365,21 @@ function empezarEquipos(yo) {
       }
       pinta(`${cabecera(e)}<div class="t-num">Pregunta ${e.indice + 1} de ${e.total}</div>${veredicto}${correcta}
         ${r.explicacion ? `<p class="t-expl">${esc(r.explicacion)}</p>` : ""}
-        ${!r.califica ? "" : e.modo === "clasico" ? `<div class="t-bloques">${r.acerte ? `<b>+${r.puntos_ganados}</b> puntos${e.yo.racha >= 2 ? ` · 🔥 racha de ${e.yo.racha}` : ""}` : "Esta vez sin puntos"}</div>`
-          : `<div class="t-bloques">Tu equipo ganó <b>+${mio.ganados}</b> bloques${mio.bonus ? " (¡el más rápido!)" : ""}</div>`}
-        ${e.modo === "clasico" ? `<div class="t-pos">Vas <b>${e.yo.posicion}.º</b> de ${e.jugadores}${e.yo.posicion > 1 ? ` · a ${e.yo.distancia} pts de ${esc(e.yo.detras_de.includes(",") ? e.yo.detras_de.split(",")[1].trim().split(" ")[0] : e.yo.detras_de.split(" ")[0])}` : " · ¡vas primero!"}</div>` : ""}
+        ${!r.califica ? "" : !EN_EQUIPOS.includes(e.modo) ? puntosHtml(e, r)
+          : `<div class="t-bloques">Tu equipo ganó <b>+${mio.ganados}</b> ${e.modo === "mapa" ? "casillas" : "bloques"}${mio.bonus ? " (¡el más rápido!)" : ""}${mio.perdidas ? ` y perdió <b>${mio.perdidas}</b> ⚔` : ""}</div>`}
+        ${cofreHtml(r)}${r.mural ? `<div class="t-bloques">🧩 La clase descubrió <b>+${r.mural.ganadas}</b> piezas del mural (${r.mural.descubiertas} de ${r.mural.total})</div>` : ""}
+        ${!EN_EQUIPOS.includes(e.modo) && e.modo !== "mural" ? `<div class="t-pos">Vas <b>${e.yo.posicion}.º</b> de ${e.jugadores}${e.yo.posicion > 1 ? ` · a ${e.yo.distancia} pts de ${primerNombre(e.yo.detras_de)}` : " · ¡vas primero!"}</div>` : ""}
         ${monoTxt ? `<div class="t-mono">${monoTxt}</div>` : ""}`);
       return programar(2000);
     }
-    if (e.fase === "final" && (e.modo === "clasico" || ritmo)) {
+    if (e.fase === "final" && e.modo === "mural") {
+      const m = (e.equipos || [])[0] || { bloques: 0 };
+      pinta(`${cabecera(e)}<h1>${m.bloques >= 30 ? "🖼️ ¡Completaron el mural!" : `🖼️ La clase descubrió ${m.bloques} de 30 piezas`}</h1>
+        <p>Mira la imagen en la pantalla del aula.</p><p>Tus respuestas correctas: <b>${e.yo.aciertos} de ${e.yo.con_nota || e.total}</b> · <b>${e.yo.puntos}</b> puntos.</p>
+        <p class="nota">¡Gracias por jugar! Ya puedes cerrar esta página.</p>`);
+      return;
+    }
+    if (e.fase === "final" && !EN_EQUIPOS.includes(e.modo)) {
       const p = e.yo.posicion;
       pinta(`${cabecera(e)}<h1>${p === 1 ? "🏆 ¡Ganaste!" : p <= 3 ? `🥇🥈🥉 ¡Podio! Puesto ${p}` : `Quedaste en el puesto ${p}`}</h1>
         <p>de ${e.jugadores} jugadores · <b>${e.yo.puntos}</b> puntos</p><p>Respuestas correctas: <b>${e.yo.aciertos} de ${e.yo.con_nota || e.total}</b>.</p>
@@ -344,6 +392,7 @@ function empezarEquipos(yo) {
       const pos = orden.findIndex((x) => x.i === e.equipo) + 1;
       pinta(`${cabecera(e)}<h1>${pos === 1 ? "🏆 ¡Tu equipo ganó!" : `Tu equipo quedó en el puesto ${pos}`}</h1>
         <div class="t-ranking">${orden.map((x, n) => `<div><span>${n + 1}. ${x.icono || ""} ${esc(x.nombre)}</span><i style="width:${Math.round(100 * x.bloques / max)}%;background:${x.color}"></i><b>${x.bloques}</b></div>`).join("")}</div>
+        <p>${e.modo === "mapa" ? "Casillas conquistadas por cada equipo." : "Bloques de la torre de cada equipo."}</p>
         <p>Tus respuestas correctas: <b>${e.yo.aciertos} de ${e.yo.con_nota || e.total}</b>.</p><p class="nota">¡Gracias por jugar! Ya puedes cerrar esta página.</p>`);
       return;
     }
