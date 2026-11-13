@@ -80,7 +80,7 @@
   const recordar = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch { return null; } return null; };
 
   JUEGOS.plataformas = {
-    nombre: "Aventura pixel", icono: "🍄", bandera: true, tiempo: 75,
+    nombre: "Aventura pixel", icono: "🍄", bandera: true, tiempo: 75, categoria: "Arcade",
     descripcion: "Plataformas retro con 4 mundos que se juegan distinto (bloques, cristales, burbujas y botones) y un jefe final. Elige tu personaje y llega a la bandera.",
     crear(ctx) {
       const lienzo = ctx.canvas;

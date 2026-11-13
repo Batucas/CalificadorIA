@@ -36,7 +36,7 @@
   const ESTRELLA = spritePixel(["...yy...", "..yyyy..", "yyyyyyyy", ".yyyyyy.", "..yyyy..", ".yy..yy.", "yy....yy"], { y: "#fde047" });
 
   JUEGOS.laberinto = {
-    nombre: "Laberinto del saber", icono: "🧭", tiempo: 40,
+    nombre: "Laberinto del saber", icono: "🧭", tiempo: 40, categoria: "Arcade",
     descripcion: "Recorre el laberinto y llega a la esquina con la respuesta correcta sin que te atrapen los bichos. Las letras cambian de esquina en cada pregunta.",
     crear(ctx) {
       const teclas = {};

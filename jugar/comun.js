@@ -3,9 +3,38 @@
    No depende del resto de la app: también servirá para jugar desde el celular. Diseñado por Lic. Salvador Ortega Pardo. */
 "use strict";
 
-const JUEGOS = {};                 // clave -> { nombre, descripcion, icono, crear(ctx) }
+const JUEGOS = {};                 // clave -> { nombre, descripcion, icono, tipo, crear(ctx) }  («tipo»: opcion por defecto)
 const LETRAS_OPCION = ["A", "B", "C", "D"];
 const COLORES_OPCION = ["#e5484d", "#3b82f6", "#f5b400", "#22a55b"];
+
+// Qué preguntas acepta cada tipo de juego individual (Laberinto y Aventura pixel solo usan «opcion»/«vf»; los
+// juegos de rompecabezas usan los mismos tipos que el Quiz y la Torre en vivo).
+const FILTRO_TIPO = {
+  opcion: (q) => (!q.tipo || q.tipo === "opcion" || q.tipo === "vf") && (q.opciones || []).length >= 2 && q.correcta >= 0,
+  escribir: (q) => q.tipo === "escribir" && (q.respuestas || []).some((r) => normTexto(r)),
+  ordenar: (q) => q.tipo === "ordenar" && (q.elementos || []).filter((e) => e && e.trim()).length >= 3,
+  clasificar: (q) => q.tipo === "clasificar" && (q.grupos || []).length >= 2 &&
+    (q.items || []).filter((it) => it && it.texto && it.texto.trim() && it.grupo >= 0 && it.grupo < q.grupos.length).length >= 2,
+};
+const SIN_PREGUNTAS_TIPO = {
+  opcion: "Este juego no tiene preguntas de opción múltiple o verdadero/falso (los otros tipos se juegan en el Quiz en vivo).",
+  escribir: "Este juego necesita preguntas de tipo «Escribir la respuesta», con una palabra o frase corta como respuesta.",
+  ordenar: "Este juego necesita preguntas de tipo «Ordenar», con 3 elementos o más.",
+  clasificar: "Este juego necesita preguntas de tipo «Clasificar en grupos», con al menos 2 grupos y 2 elementos.",
+};
+/* Quita tildes, mayúsculas y símbolos para comparar respuestas escritas (igual que en el Quiz en vivo). */
+function normTexto(t) {
+  return String(t ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9ñ ]/g, " ").replace(/\s+/g, " ").trim();
+}
+/* Cómo se describe la respuesta correcta de cada tipo, para el aviso de «incorrecto» y el resumen final. */
+function textoCorrectaJuego(q) {
+  const t = q.tipo || "opcion";
+  if (t === "escribir") return (q.respuestas || [])[0] || "";
+  if (t === "ordenar") return (q.elementos || []).join(" → ");
+  if (t === "clasificar") return (q.grupos || []).map((g, i) => `${g}: ${(q.items || []).filter((it) => it.grupo === i).map((it) => it.texto).join(", ") || "—"}`).join(" · ");
+  return `${LETRAS_OPCION[q.correcta]}) ${q.opciones[q.correcta]}`;
+}
 
 /* ---------------------------------------------------------------- sonidos (chiptune con WebAudio) */
 const Sonido = {
@@ -85,10 +114,11 @@ function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alPr
   const def = JUEGOS[clave];
   if (!def) throw new Error("Juego no disponible.");
   const limite = tiempo || def.tiempo || 45;
-  // estos juegos usan preguntas de opciones (opción múltiple y verdadero/falso); los otros tipos son para el Quiz y la Torre en vivo
-  const deOpciones = (paquete.preguntas || []).filter((q) => (!q.tipo || q.tipo === "opcion" || q.tipo === "vf") && (q.opciones || []).length >= 2 && q.correcta >= 0);
-  if (!deOpciones.length) throw new Error("Este juego no tiene preguntas de opción múltiple o verdadero/falso (los otros tipos se juegan en el Quiz en vivo).");
-  const preguntas = (mezclar ? barajar(deOpciones) : deOpciones).map((q) => {
+  const tipoJuego = def.tipo || "opcion";
+  const usables = (paquete.preguntas || []).filter(FILTRO_TIPO[tipoJuego] || FILTRO_TIPO.opcion);
+  if (!usables.length) throw new Error(SIN_PREGUNTAS_TIPO[tipoJuego] || SIN_PREGUNTAS_TIPO.opcion);
+  const preguntas = (mezclar ? barajar(usables) : usables).map((q) => {
+    if (tipoJuego !== "opcion") return q;   // los demás tipos mezclan su rompecabezas al mostrarlo, no aquí
     // mezcla también las opciones (la correcta cambia de lugar en cada partida)
     const orden = mezclar ? barajar(q.opciones.map((_, i) => i)) : q.opciones.map((_, i) => i);
     return { ...q, opciones: orden.map((i) => q.opciones[i]), correcta: orden.indexOf(q.correcta) };
@@ -96,7 +126,7 @@ function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alPr
   const st = { i: 0, puntos: 0, vidas, vidasMax: vidas, aciertos: 0, respuestas: [], esperando: false, pausado: false,
                respondida: false, terminado: false, restante: limite, relojActivo: true, tPregunta: Date.now() };
   const capa = document.createElement("div");
-  capa.className = "juego-capa";
+  capa.className = "juego-capa" + (tipoJuego === "opcion" ? "" : " sin-canvas");   // rompecabezas: sin mundo con canvas
   capa.innerHTML = `
     <div class="juego-barra">
       <div class="juego-titulo">${def.icono} ${escJuego(paquete.titulo || def.nombre)}</div>
@@ -106,7 +136,8 @@ function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alPr
         <button data-j="pantalla" title="Pantalla completa (F)">⛶</button>${sinSalir ? "" : `<button data-j="salir" title="Salir (Esc)">✕</button>`}</div>
     </div>
     <div class="juego-pregunta"><div class="juego-pregunta-texto"></div><div class="juego-reloj"><i></i><span></span></div></div>
-    <div class="juego-cuerpo"><div class="juego-lienzo"><canvas></canvas><div class="juego-mando"></div></div><div class="juego-opciones"></div></div>
+    <div class="juego-cuerpo"><div class="juego-lienzo"><canvas></canvas><div class="juego-mando"></div></div><div class="juego-opciones"></div>
+      <div class="juego-puzzle"></div></div>
     <div class="juego-aviso oculto"></div>`;
   document.body.appendChild(capa);
   const $j = (s) => capa.querySelector(s);
@@ -129,8 +160,10 @@ function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alPr
     const img = q.imagen && paquete.baseImagen ? paquete.baseImagen + q.imagen : "";   // imagen de la pregunta (si la tiene)
     $j(".juego-pregunta-texto").innerHTML = (img ? `<img class="juego-pregunta-img" src="${escJuego(img)}" alt="Imagen de la pregunta" title="Clic para ampliar">` : "")
       + `<span>${escJuego(q.pregunta)}</span>`;
-    $j(".juego-opciones").innerHTML = q.opciones.map((o, k) => `<div class="juego-opcion" data-k="${k}">
-      <b style="background:${COLORES_OPCION[k]}">${LETRAS_OPCION[k]}</b><span>${escJuego(o)}</span></div>`).join("");
+    if (tipoJuego === "opcion") {
+      $j(".juego-opciones").innerHTML = q.opciones.map((o, k) => `<div class="juego-opcion" data-k="${k}">
+        <b style="background:${COLORES_OPCION[k]}">${LETRAS_OPCION[k]}</b><span>${escJuego(o)}</span></div>`).join("");
+    }   // los demás tipos dibujan su propio rompecabezas en .juego-puzzle (lo hace juego.ronda())
     pintarMarcador(); pintarReloj();
   };
   const mostrarAviso = (html, clase, ms) => new Promise((ok) => {
@@ -139,12 +172,18 @@ function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alPr
     else ok();
   });
   /* Registra la respuesta (k = null: se acabó el tiempo). Equivocarse quita una vida. */
-  const registrar = (k, motivo) => {
-    const q = preguntas[st.i], bien = k === q.correcta;
+  const registrar = (valor, motivo) => {
+    const q = preguntas[st.i];
+    let bien, elegidaTxt;
+    if (motivo === "tiempo") { bien = false; elegidaTxt = null; }
+    else if (valor && typeof valor === "object") { bien = !!valor.bien; elegidaTxt = valor.detalle || null; }    // juegos de rompecabezas (ctx.enviar)
+    else { bien = valor === q.correcta; elegidaTxt = valor == null ? null : q.opciones[valor]; }                 // opción múltiple / verdadero-falso
+    const correctaTxt = textoCorrectaJuego(q);
     st.esperando = true; st.respondida = true;
-    st.respuestas.push({ pregunta: q.pregunta, elegida: k == null ? null : q.opciones[k], correcta: q.opciones[q.correcta], bien,
-                         sinTiempo: motivo === "tiempo", explicacion: q.explicacion });
-    capa.querySelectorAll(".juego-opcion").forEach((el) => el.classList.add(+el.dataset.k === q.correcta ? "es-correcta" : +el.dataset.k === k ? "es-error" : "apagada"));
+    st.respuestas.push({ pregunta: q.pregunta, elegida: elegidaTxt, correcta: correctaTxt, bien, sinTiempo: motivo === "tiempo", explicacion: q.explicacion });
+    if (tipoJuego === "opcion") {
+      capa.querySelectorAll(".juego-opcion").forEach((el) => el.classList.add(+el.dataset.k === q.correcta ? "es-correcta" : +el.dataset.k === valor ? "es-error" : "apagada"));
+    }
     if (bien) { st.aciertos++; st.puntos += 100 + Math.round(50 * Math.max(0, st.restante) / limite); Sonido.correcto(); }
     else { st.vidas = Math.max(0, st.vidas - 1); Sonido.error(); }
     pintarMarcador(); pintarReloj();
@@ -153,7 +192,7 @@ function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alPr
     const titulo = bien ? "¡Correcto! 🎉" : motivo === "tiempo" ? "⏰ ¡Se acabó el tiempo!" : "Incorrecto ❌";
     mostrarAviso(`<div class="juego-aviso-caja"><div class="juego-aviso-titulo">${titulo}</div>
       ${bien ? "" : `<div class="juego-aviso-vida">−1 ♥ ${sinVidas ? "· ¡Sin vidas!" : `· te quedan ${st.vidas}`}</div>`}
-      ${bien ? "" : `<div>La respuesta correcta era: <b>${LETRAS_OPCION[q.correcta]}) ${escJuego(q.opciones[q.correcta])}</b></div>`}
+      ${bien ? "" : `<div>La respuesta correcta era: <b>${escJuego(correctaTxt)}</b></div>`}
       ${q.explicacion ? `<div class="juego-aviso-expl">${escJuego(q.explicacion)}</div>` : ""}</div>`, bien ? "bien" : "mal", bien ? 2000 : 4200)
       .then(() => {
         if (st.terminado) return;
@@ -167,7 +206,7 @@ function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alPr
   };
 
   const ctx = {
-    canvas: $j("canvas"), sonido: Sonido, colores: COLORES_OPCION, letras: LETRAS_OPCION,
+    canvas: $j("canvas"), puzzle: $j(".juego-puzzle"), sonido: Sonido, colores: COLORES_OPCION, letras: LETRAS_OPCION, normTexto,
     pausado: () => st.pausado || st.esperando || st.terminado,
     sumar(n) { st.puntos += n; pintarMarcador(); },
     vidas: () => st.vidas,
@@ -177,10 +216,17 @@ function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alPr
     // antes de empezar (elegir personaje) la pregunta queda oculta y el reloj quieto: nadie la lee con ventaja
     detenerReloj() { st.relojActivo = false; capa.classList.add("sin-pregunta"); },
     pregunta: () => preguntas[st.i],
+    todas: () => preguntas,   // para juegos que necesitan las demás preguntas (p. ej. distractores de otras definiciones)
     /* El juego avisa la opción elegida; devuelve si fue correcta. */
     responder(k) {
       if (st.esperando || st.respondida || st.terminado || st.i >= preguntas.length) return null;
       return registrar(k, null);
+    },
+    /* Para los juegos de rompecabezas (letras, orden, grupos): ya armó su respuesta. «detalle» (texto) se guarda
+       para el resumen final («tu respuesta: …»). */
+    enviar(bien, detalle) {
+      if (st.esperando || st.respondida || st.terminado || st.i >= preguntas.length) return null;
+      return registrar({ bien, detalle }, null);
     },
     /* Un enemigo, una caída… quitan una vida. Sin vidas, el juego termina. */
     perderVida() {
@@ -203,7 +249,7 @@ function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alPr
     st.i++; st.esperando = false; st.respondida = false;
     if (st.i >= preguntas.length) return terminar("fin");
     st.restante = limite; st.tPregunta = Date.now(); pintarPregunta();
-    juego.ronda(preguntas[st.i].opciones.length, { indice: st.i, total: preguntas.length });
+    juego.ronda((preguntas[st.i].opciones || []).length, { indice: st.i, total: preguntas.length });
   };
   const resultado = () => ({ puntos: st.puntos, aciertos: st.aciertos, total: preguntas.length, respondidas: st.respuestas.filter((x) => !x.sinResponder).length,
     nota: Math.round(100 * st.aciertos / Math.max(1, preguntas.length)), respuestas: st.respuestas, terminado: st.terminado });
@@ -213,7 +259,7 @@ function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alPr
     // las preguntas que no alcanzó a responder cuentan como incorrectas
     for (let n = st.respuestas.length; n < preguntas.length; n++) {
       const q = preguntas[n];
-      st.respuestas.push({ pregunta: q.pregunta, elegida: null, correcta: q.opciones[q.correcta], bien: false, sinResponder: true, explicacion: q.explicacion });
+      st.respuestas.push({ pregunta: q.pregunta, elegida: null, correcta: textoCorrectaJuego(q), bien: false, sinResponder: true, explicacion: q.explicacion });
     }
     const r = resultado();
     try { alTerminar(r); } catch (e) { console.error(e); }
@@ -261,7 +307,111 @@ function jugar(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alPr
 
   pintarPregunta();
   juego = def.crear(ctx);
-  juego.ronda(preguntas[0].opciones.length, { indice: 0, total: preguntas.length });
+  juego.ronda((preguntas[0].opciones || []).length, { indice: 0, total: preguntas.length });
+  return { cerrar };
+}
+
+/* Partida de «tablero completo» (sopa de letras, crucigrama): varias palabras a la vez en un solo tablero, sin
+   vidas; se busca o completa todo antes de que se acabe el tiempo total, o se entrega cuando el jugador quiera.
+   Mismas opciones que jugar() («vidas» se ignora) y el mismo resultado (puntos, aciertos, total, nota…), así que
+   el enganche con Moodle es igual. El juego (def.crear) arma su tablero una sola vez con ctx.palabras() y avisa el
+   progreso con ctx.actualizar()/ctx.terminar(); si se acaba el tiempo, se llama a juego.agotado() si existe. */
+function jugarTablero(paquete, clave, { alSalir = () => {}, alTerminar = () => {}, alProgreso = () => {}, mezclar = true, tiempo = 0,
+                                        repetir = true, sinSalir = false, mensajeFinal = "" } = {}) {
+  const def = JUEGOS[clave];
+  if (!def) throw new Error("Juego no disponible.");
+  const tipoJuego = def.tipo || "escribir";
+  const limite = tiempo || def.tiempo || 240;
+  const usables = (paquete.preguntas || []).filter(FILTRO_TIPO[tipoJuego] || FILTRO_TIPO.escribir);
+  if (usables.length < 3) throw new Error("Este juego necesita al menos 3 preguntas de tipo «Escribir la respuesta», con una palabra o frase corta como respuesta.");
+  const palabras = (mezclar ? barajar(usables) : usables).slice(0, def.maxPalabras || 8);
+  const st = { puntos: 0, restante: limite, terminado: false, pausado: false };
+  const capa = document.createElement("div");
+  capa.className = "juego-capa tablero";
+  capa.innerHTML = `
+    <div class="juego-barra">
+      <div class="juego-titulo">${def.icono} ${escJuego(paquete.titulo || def.nombre)}</div>
+      <div class="juego-marcador"><span class="juego-progreso" id="tabProgreso"></span><span class="juego-puntos">0 pts</span></div>
+      <div class="juego-botones">
+        <button data-j="sonido" title="Sonido">🔊</button><button data-j="pausa" title="Pausa (P)">⏸</button>
+        <button data-j="pantalla" title="Pantalla completa (F)">⛶</button>${sinSalir ? "" : `<button data-j="salir" title="Salir (Esc)">✕</button>`}</div>
+    </div>
+    <div class="juego-reloj" style="margin:10px 16px 0;max-width:none"><i></i><span></span></div>
+    <div class="juego-cuerpo"><div class="juego-puzzle"></div></div>
+    <div class="juego-aviso oculto"></div>`;
+  document.body.appendChild(capa);
+  const $j = (s) => capa.querySelector(s);
+  const aviso = $j(".juego-aviso");
+  const pintarReloj = () => {
+    const f = Math.max(0, st.restante / limite);
+    const barra = $j(".juego-reloj i"); barra.style.width = `${f * 100}%`; barra.className = f < 0.2 ? "urgente" : "";
+    $j(".juego-reloj span").textContent = `${Math.ceil(st.restante)} s`;
+  };
+  const mostrarAviso = (html, clase, ms) => new Promise((ok) => {
+    aviso.className = `juego-aviso ${clase}`; aviso.innerHTML = html;
+    if (ms) setTimeout(() => { aviso.className = "juego-aviso oculto"; ok(); }, ms); else ok();
+  });
+  let juego;
+  const ctx = {
+    puzzle: $j(".juego-puzzle"), sonido: Sonido, normTexto,
+    pausado: () => st.pausado || st.terminado,
+    sumar(n) { st.puntos += n; $j(".juego-puntos").textContent = `${st.puntos} pts`; },
+    palabras: () => palabras,
+    actualizar(encontradas, total) {
+      $j("#tabProgreso").textContent = `${encontradas} / ${total}`;
+      try { alProgreso({ puntos: st.puntos, aciertos: encontradas, total, nota: Math.round(100 * encontradas / Math.max(1, total)), respuestas: [], terminado: false }); } catch (e) { console.error(e); }
+    },
+    /* El juego entrega el resultado (puede ser antes de tiempo, con «Comprobar»/«Entregar», o al agotarse el reloj). */
+    terminar(encontradas, total, detalle) {
+      if (st.terminado) return;
+      st.terminado = true; clearInterval(reloj); Sonido.fin();
+      const nota = Math.round(100 * encontradas / Math.max(1, total));
+      const r = { puntos: st.puntos, aciertos: encontradas, total, nota, respuestas: detalle || [], terminado: true };
+      try { alTerminar(r); } catch (e) { console.error(e); }
+      mostrarAviso(`<div class="juego-aviso-caja final"><div class="juego-aviso-titulo">🏆 ¡Tablero terminado!</div>
+        <div class="juego-final-cifras"><div><b>${st.puntos}</b><span>puntos</span></div><div><b>${encontradas}/${total}</b><span>encontradas</span></div><div><b>${nota}</b><span>nota sobre 100</span></div></div>
+        ${mensajeFinal ? `<div class="juego-aviso-expl" style="margin:0 0 10px">${mensajeFinal}</div>` : ""}
+        <div class="juego-final-lista">${(detalle || []).map((x) => `<div class="${x.bien ? "ok" : "no"}"><b>${x.bien ? "✔" : "✘"}</b> ${escJuego(x.pregunta)} <small>${escJuego(x.correcta || "")}</small></div>`).join("")}</div>
+        <div class="juego-aviso-botones">${repetir ? `<button data-j="otra">Jugar otra vez</button>` : ""}${sinSalir ? "" : `<button data-j="salir">Salir</button>`}</div></div>`, "final");
+    },
+  };
+  const reloj = setInterval(() => {
+    if (st.terminado || st.pausado) return;
+    st.restante -= 0.2; pintarReloj();
+    if (st.restante <= 0) { st.restante = 0; pintarReloj(); if (juego.agotado) juego.agotado(); }
+  }, 200);
+  const quitar = () => { clearInterval(reloj); juego && juego.destruir(); window.removeEventListener("keydown", teclas, true); capa.remove(); };
+  const cerrar = () => {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    quitar(); alSalir({ puntos: st.puntos, aciertos: 0, total: palabras.length, nota: 0, respuestas: [], terminado: st.terminado });
+  };
+  const pausar = (b) => {
+    if (st.terminado) return;
+    st.pausado = b; $j('[data-j="pausa"]').textContent = b ? "▶" : "⏸";
+    if (b) mostrarAviso(`<div class="juego-aviso-caja"><div class="juego-aviso-titulo">⏸ Pausa</div><div>El tiempo total sigue corriendo.</div><div>Pulsa P o ▶ para seguir.</div></div>`, "pausa");
+    else if (aviso.classList.contains("pausa")) aviso.className = "juego-aviso oculto";
+  };
+  // mientras se escribe en una casilla del crucigrama, «p»/«f» son letras normales, no atajos
+  const enCampo = () => document.activeElement && ["INPUT", "TEXTAREA"].includes(document.activeElement.tagName);
+  const teclas = (e) => {
+    if (e.key === "Escape") { e.preventDefault(); if (document.fullscreenElement) document.exitFullscreen(); else if (!sinSalir) cerrar(); }
+    else if ((e.key === "p" || e.key === "P") && !enCampo()) pausar(!st.pausado);
+    else if ((e.key === "f" || e.key === "F") && !enCampo()) pantalla();
+  };
+  const pantalla = () => { if (document.fullscreenElement) document.exitFullscreen(); else capa.requestFullscreen && capa.requestFullscreen().catch(() => {}); };
+  window.addEventListener("keydown", teclas, true);
+  capa.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-j]"); if (!b) return;
+    const a = b.dataset.j;
+    if (a === "salir") cerrar();
+    else if (a === "pausa") pausar(!st.pausado);
+    else if (a === "pantalla") pantalla();
+    else if (a === "sonido") { Sonido.activo = !Sonido.activo; b.textContent = Sonido.activo ? "🔊" : "🔇"; }
+    else if (a === "otra") { quitar(); jugarTablero(paquete, clave, { alSalir, alTerminar, alProgreso, mezclar, tiempo, repetir, sinSalir, mensajeFinal }); }
+  });
+  pintarReloj();
+  juego = def.crear(ctx);
+  juego.ronda();
   return { cerrar };
 }
 
