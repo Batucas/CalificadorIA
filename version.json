@@ -1,10 +1,9 @@
 {
-  "version": "2.8",
+  "version": "2.8.1",
   "descarga": "https://github.com/Batucas/CalificadorIA/releases/latest/download/Instalar_Calificador_IA.exe",
   "portal": "https://batucas.github.io/CalificadorIA/",
   "novedades": [
-    "Corrección: al activar Examen, Simulador, Actividad interactiva o Laboratorio en Personalizar, ahora se garantiza que aparezcan en el Proyecto Formativo",
-    "Nuevo: Laboratorios (actividades de aula en HTML) con biblioteca compartida entre docentes",
-    "Nuevo: calificación directa de Simuladores y Laboratorios, con exportación a Excel"
+    "Corrección: Laboratorios ahora avisa solo cuando llegan los resultados, sin tener que recargar la sesión",
+    "Corrección: al activar Examen, Simulador, Actividad interactiva o Laboratorio en Personalizar, ahora se garantiza que aparezcan en el Proyecto Formativo"
   ]
 }
