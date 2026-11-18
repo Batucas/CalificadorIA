@@ -81,6 +81,7 @@
 <script src="comun.js"></script>
 <script src="laberinto.js"></script>
 <script src="plataformas.js"></script>
+<script src="laboratorio.js"></script>
 <script>
 "use strict";
 const PARAM = new URLSearchParams(location.search);
@@ -125,6 +126,7 @@ const MODOS = {
   mural: ["🖼️ Mural de la clase", (n) => `${n} preguntas. Toda la clase juega junta: cada acierto descubre piezas de una imagen secreta en la pantalla del aula.`],
 };
 function elegir() {
+  if (sala.modo === "lab") return elegirLab();          // laboratorio en vivo (laboratorio.js)
   const previo = leer(`vivo.${codigo}`);
   const caja = $("#caja");
   const conLista = sala.alumnos.length > 0;
