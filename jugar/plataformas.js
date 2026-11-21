@@ -4,7 +4,13 @@
      Cueva    → sube al escalón y salta al cristal colgante con la respuesta.
      Nieve    → revienta la burbuja con la respuesta (el hielo resbala).
      Castillo → cae encima del botón con la respuesta (cuidado con la lava).
-     Jefe     → la última pregunta: golpea el bloque correcto para lanzarle un rayo al Rey Bicho.
+     Desierto → bloques, con cactus que no se pueden pisar.
+     Selva    → cristales, con más bichos voladores.
+     Nubes    → burbujas, con nubes que se deshacen si te quedas parado encima.
+     Volcán   → botones, con bolas de fuego que saltan de la lava.
+     Jefe     → cada 5 preguntas (y en la última) aparece el Rey Bicho, con 3 vidas: cada respuesta correcta en su nivel le
+                lanza un rayo; al tercero queda derrotado (y vuelve más fuerte si quedan preguntas).
+   La dificultad sube a medida que se avanza: más tramos, más enemigos y más rápidos.
    Al responder se abre la reja y hay que llegar a la bandera. Cada error cuesta una vida (lo maneja el marco común).
    El salto es siempre completo y todo lo que se debe tocar está a su alcance. Gráficos propios.
    Diseñado por Lic. Salvador Ortega Pardo. */
@@ -14,7 +20,7 @@
   const T = 16, VW = 320, VH = 176, FILAS = 11, SUELO = 9;      // filas 9 y 10: suelo (techo del suelo en y = 144)
   const GRAV = 900, SALTO = -340;                                // salto completo: sube 64 px (4 bloques)
   const AN = 11, AL = 15;                                        // caja del héroe
-  const SOLIDOS = new Set(["suelo", "ladrillo", "sorpresa", "usado", "tubo", "muro", "piedra", "losa", "bloque", "reja"]);
+  const SOLIDOS = new Set(["suelo", "ladrillo", "sorpresa", "usado", "tubo", "muro", "piedra", "losa", "bloque", "reja", "nube"]);
 
   /* ------------------------------------------------------------ personajes */
   const CUERPO = ["....bbbbbb..", "...bbbbbbbbb", "...ssssss...", "..sskssks...", "..ssssssss..", "...sskkss...", "....ssss....",
@@ -56,6 +62,9 @@
   const MONEDA = spritePixel(["..yyyy..", ".yywwyy.", "yywyyyyy", "yywyyyyy", "yyyyyyyy", "yyyyyyyy", ".yyyyyy.", "..yyyy.."], { y: "#f5b400", w: "#fff6c2" });
   const CORAZON = spritePixel([".rr..rr.", "rwrrrrrr", "rrrrrrrr", "rrrrrrrr", ".rrrrrr.", "..rrrr..", "...rr...", "........"], { r: "#ef4444", w: "#fecaca" });
   const ESTRELLA = spritePixel(["...yy...", "...yy...", "yyyyyyyy", ".ykyyky.", "..yyyy..", ".yyyyyy.", ".yy..yy.", "y......y"], { y: "#fde047", k: "#1a1a2e" });
+  const CACTUS = spritePixel([
+    "....gg......", "...gggg.....", "...gwgg..g..", "g..gggg.ggg.", "gg.gggg.ggg.", "ggggggg.ggg.", ".gggggggggg.",
+    "...ggggggg..", "...gggg.....", "...gwgg.....", "...gggg.....", "...gggg.....", "...gggg.....", "..kkkkkk...."], { g: "#15803d", w: "#bbf7d0", k: "#78350f" });
   const FUEGO = spritePixel(["..oo..", ".oyyo.", "oyyyyo", "oyyyyo", ".oyyo.", "..oo.."], { o: "#f97316", y: "#fde047" });
 
   /* ------------------------------------------------------------ mundos (cada uno con su forma de responder) */
@@ -72,16 +81,28 @@
     castillo: { nombre: "Castillo", mec: "botones", cielo: ["#2a0f1f", "#6b1d1d"], suelo: "#57534e", sueloOsc: "#3f3a36", borde: "#a8a29e", bordeOsc: "#78716c",
       ladrillo: "#78716c", ladrilloOsc: "#44403c", piedra: "#57534e", enemigo: "#dc2626", lava: true, voladores: true,
       ayuda: "CAE ENCIMA del botón con la respuesta (¡cuidado con la lava!)" },
+    desierto: { nombre: "Desierto", mec: "bloques", cielo: ["#fb923c", "#fde68a"], suelo: "#d6a75c", sueloOsc: "#b07d36", borde: "#f3d18a", bordeOsc: "#d6a75c",
+      ladrillo: "#c2410c", ladrilloOsc: "#7c2d12", piedra: "#d6a75c", enemigo: "#a16207", cactus: true,
+      ayuda: "Golpea DESDE ABAJO el bloque correcto (¡los cactus pinchan: sáltalos!)" },
+    selva: { nombre: "Selva", mec: "gemas", cielo: ["#14532d", "#4ade80"], suelo: "#5b3a1e", sueloOsc: "#3f2814", borde: "#22c55e", bordeOsc: "#15803d",
+      ladrillo: "#65a30d", ladrilloOsc: "#365314", piedra: "#78716c", enemigo: "#ea580c", voladores: true, masVoladores: true,
+      ayuda: "Sube al escalón y SALTA al cristal correcto (¡cuidado con los pájaros!)" },
+    nubes: { nombre: "Nubes", mec: "burbujas", cielo: ["#60a5fa", "#e0f2fe"], suelo: "#e2e8f0", sueloOsc: "#cbd5e1", borde: "#ffffff", bordeOsc: "#e2e8f0",
+      ladrillo: "#a5b4fc", ladrilloOsc: "#6366f1", piedra: "#f8fafc", enemigo: "#6366f1", nubes: true,
+      ayuda: "REVIENTA la burbuja correcta (¡las nubes se deshacen si te quedas encima!)" },
+    volcan: { nombre: "Volcán", mec: "botones", cielo: ["#1c0a0a", "#7f1d1d"], suelo: "#292524", sueloOsc: "#1c1917", borde: "#57534e", bordeOsc: "#44403c",
+      ladrillo: "#44403c", ladrilloOsc: "#1c1917", piedra: "#44403c", enemigo: "#f97316", lava: true, saltaFuego: true,
+      ayuda: "CAE ENCIMA del botón correcto (¡las bolas de fuego saltan de la lava!)" },
   };
   Object.values(MUNDOS).forEach((m) => (m.caminante = caminante(m.enemigo)));
-  const ORDEN = ["pradera", "cueva", "nieve", "castillo"];
+  const ORDEN = ["pradera", "cueva", "nieve", "castillo", "desierto", "selva", "nubes", "volcan"];
 
   const azar = (s) => () => { s = (s * 1664525 + 1013904223) % 4294967296; return s / 4294967296; };
   const recordar = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch { return null; } return null; };
 
   JUEGOS.plataformas = {
     nombre: "Aventura pixel", icono: "🍄", bandera: true, tiempo: 75, categoria: "Arcade",
-    descripcion: "Plataformas retro con 4 mundos que se juegan distinto (bloques, cristales, burbujas y botones) y un jefe final. Elige tu personaje y llega a la bandera.",
+    descripcion: "Plataformas retro con 8 mundos (bloques, cristales, burbujas y botones; cactus, nubes que se deshacen y bolas de fuego) y el Rey Bicho cada 5 preguntas. Elige tu personaje y llega a la bandera.",
     crear(ctx) {
       const lienzo = ctx.canvas;
       let g = ajustarLienzo(lienzo, VW, VH);
@@ -91,23 +112,27 @@
       let estado = "elegir", eleccion = Math.max(0, Math.min(3, +(recordar("pixel.personaje") || 0))), pj = PERSONAJES[eleccion];
       let nivel, mundo, heroe, bichos, monedas, opciones, items, fuegos, particulas, moviles, camara = 0, cartel = 0, jefe = null, t = 0;
       let reja = { x: 0, abierta: false, sube: 0 }, meta = { x: 0, tocada: 0 }, control = { x: 2 * T, zona: 0 };
+      let vidaJefe = 3, jefesDerrotados = 0, saltosFuego = [], nubesRotas = [];     // el Rey Bicho conserva sus vidas entre apariciones
       ctx.detenerReloj();                                         // el tiempo corre al elegir personaje
 
       /* ---------------------------------------------------------- generador de niveles por tramos */
       const crearNivel = () => {
         const rnd = azar(semilla + ronda * 7919);
-        const esJefe = info.total >= 3 && info.indice === info.total - 1;
+        const ultima = info.total >= 3 && info.indice === info.total - 1, quinta = info.total >= 5 && (info.indice + 1) % 5 === 0;
+        const esJefe = ultima || quinta;
         mundo = MUNDOS[esJefe ? "castillo" : ORDEN[(ronda - 1) % ORDEN.length]];
         const mec = esJefe ? "bloques" : mundo.mec;
         const ancho = 120;
         const tt = Array.from({ length: FILAS }, (_, y) => Array.from({ length: ancho }, (_, x) => (y >= SUELO ? "suelo" : x === 0 ? "muro" : null)));
-        const lava = new Set(), patrullas = [];
+        const lava = new Set(), patrullas = [], cactus = [];
+        saltosFuego = []; nubesRotas = [];
         monedas = []; bichos = []; items = []; fuegos = []; particulas = []; moviles = []; opciones = [];
-        const hueco = (x0, w) => { for (let x = x0; x < x0 + w; x++) { tt[SUELO][x] = null; tt[SUELO + 1][x] = null; if (mundo.lava) lava.add(x); } };
+        const hueco = (x0, w) => { for (let x = x0; x < x0 + w; x++) { tt[SUELO][x] = null; tt[SUELO + 1][x] = null; if (mundo.lava) lava.add(x); }
+          if (mundo.saltaFuego && !esJefe) saltosFuego.push({ x: (x0 + w / 2) * T - 3, y: VH + 20, vy: 0, espera: 1 + rnd() * 2 }); };
         const arco = (x0, w, alto) => { for (let i = 0; i <= w; i++) monedas.push({ x: (x0 + i) * T + 4, y: (SUELO - 1) * T - Math.round(Math.sin((i / w) * Math.PI) * alto) - 6, tomada: false }); };
         // tramos (todos verificados: se cruzan con el salto completo)
         const TRAMOS = {
-          llano: (x) => { patrullas.push([x, x + 5]); arco(x + 1, 3, 10); return 7; },
+          llano: (x) => { patrullas.push([x, x + 5]); arco(x + 1, 3, 10); if (mundo.cactus) cactus.push(x + 3); return 7; },
           foso: (x) => { const w = ronda === 1 ? 2 : 2 + Math.floor(rnd() * 2); hueco(x + 2, w); arco(x + 1, w + 1, 40); return w + 5; },
           tubos: (x) => {
             const h1 = 1 + Math.floor(rnd() * 2), h2 = 1 + Math.floor(rnd() * 2);
@@ -124,8 +149,9 @@
             tt[5][x + 2] = "ladrillo"; tt[5][x + 3] = "sorpresa"; tt[5][x + 4] = "ladrillo";
             arco(x + 1, 4, 8); return 7;
           },
-          islas: (x) => {      // foso ancho con una isla de piedra en medio (fila 7: sube 32 px)
-            hueco(x + 1, 6); tt[7][x + 3] = "piedra"; tt[7][x + 4] = "piedra";
+          islas: (x) => {      // foso ancho con una isla de piedra en medio (fila 7: sube 32 px); en Nubes, la isla se deshace
+            const isla = mundo.nubes ? "nube" : "piedra";
+            hueco(x + 1, 6); tt[7][x + 3] = isla; tt[7][x + 4] = isla;
             monedas.push({ x: (x + 3) * T + 8, y: 5 * T, tomada: false }); return 11;
           },
           movil: (x) => {      // foso con plataforma que va y viene
@@ -136,8 +162,13 @@
         };
         const faciles = ["llano", "foso", "tubos", "sorpresa"];
         const todos = ["llano", "foso", "tubos", "sorpresa", "escalera", "islas", "movil"].filter((x) => !(mundo.hielo && x === "movil"));
-        const lista = ronda === 1 ? ["sorpresa", "foso"] : [0, 1, 2].map(() => (ronda < 3 ? faciles : todos)[Math.floor(rnd() * (ronda < 3 ? faciles : todos).length)]);
+        // más tramos a medida que se avanza: 3 al comienzo, hasta 6
+        const nTramos = Math.min(6, 3 + Math.floor((ronda - 1) / 4));
+        const lista = ronda === 1 ? ["sorpresa", "foso"] : Array.from({ length: nTramos }, () => (ronda < 3 ? faciles : todos)[Math.floor(rnd() * (ronda < 3 ? faciles : todos).length)]);
         if (mundo === MUNDOS.cueva && !lista.includes("movil") && ronda > 1) lista[1] = "movil";
+        if (mundo.nubes && !lista.includes("islas") && ronda > 1) lista[1] = "islas";
+        if (mundo.cactus && !lista.includes("llano") && ronda > 1) lista[0] = "llano";
+        if (mundo.saltaFuego && !lista.includes("foso") && ronda > 1) lista[lista.length - 1] = "foso";
         let cx = 4;
         lista.forEach((nombre) => { cx += TRAMOS[nombre](cx) + 1; });   // +1: siempre suelo plano entre obstáculos para tomar impulso
         cx += 5;                                                  // tramo plano antes de las respuestas: nadie responde sin querer al bajar de un salto
@@ -166,15 +197,18 @@
         meta = { x: (xReja + 5) * T, tocada: 0, listo: false };
         control = { x: 2 * T, zona: zona0 * T };
         // enemigos: caminantes en los tramos llanos; voladores en cueva y castillo; pinchos desde la ronda 3
-        const nB = Math.min(patrullas.length, 1 + Math.floor(ronda / 2));
+        const nB = Math.min(patrullas.length, 1 + Math.floor(ronda / 2)), velB = Math.min(60, 22 + ronda * 2.5);
         for (let i = 0; i < nB; i++) {
           const [a, b] = patrullas[i];
           const tipo = ronda >= 3 && i === nB - 1 ? "pincho" : "caminante";
-          bichos.push({ tipo, x: a * T + rnd() * (b - a) * T, y: SUELO * T - 12, vx: (rnd() < 0.5 ? -1 : 1) * (22 + ronda * 1.5),
+          bichos.push({ tipo, x: a * T + rnd() * (b - a) * T, y: SUELO * T - 12, vx: (rnd() < 0.5 ? -1 : 1) * velB,
             min: a * T, max: b * T, vivo: true, aplastado: 0, fase: 0 });
         }
-        if (mundo.voladores) bichos.push({ tipo: "volador", x: 10 * T, y: 3 * T, y0: 3 * T + 6, vx: 30, min: 6 * T, max: (zona0 - 2) * T, vivo: true, aplastado: 0, fase: rnd() * 6 });
-        jefe = esJefe ? { x: (xReja + 3) * T, y: 2 * T, t: 0, disparo: 3, estado: "vivo", golpe: 0, vy: 0 } : null;
+        cactus.forEach((cx) => bichos.push({ tipo: "cactus", x: cx * T + 2, y: SUELO * T - 14, vx: 0, min: cx * T, max: cx * T, vivo: true, aplastado: 0, fase: 0 }));
+        // voladores en cueva, castillo y selva; desde la ronda 7 también en los demás mundos (y dos en la selva)
+        const nV = (mundo.voladores || ronda >= 7 ? 1 : 0) + (mundo.masVoladores && ronda >= 4 ? 1 : 0);
+        for (let i = 0; i < nV; i++) bichos.push({ tipo: "volador", x: (10 + i * 14) * T, y: 3 * T, y0: (3 + i) * T + 6, vx: 30 + ronda, min: 6 * T, max: (zona0 - 2) * T, vivo: true, aplastado: 0, fase: rnd() * 6 });
+        jefe = esJefe ? { x: (xReja + 3) * T, y: 2 * T, t: 0, disparo: 3, estado: "vivo", golpe: 0, vy: 0, vida: vidaJefe, ultima } : null;
         nivel = { t: tt, ancho: fin + 1, lava, zona0, mec };
         heroe = { x: 2 * T, y: SUELO * T - AL, vx: 0, vy: 0, suelo: false, mira: 1, invul: 1.0, paso: 0, estrella: 0, sobre: null };
         camara = 0; cartel = 2.6;
@@ -243,6 +277,7 @@
         if (h.vy >= 0 && cols.some((cx) => solido(cx, Math.floor((h.y + AL) / T)))) {
           const cy = Math.floor((h.y + AL) / T);
           h.y = cy * T - AL; h.vy = 0; h.suelo = true;
+          for (const cx of cols) if (nivel.t[cy][cx] === "nube" && !nubesRotas.some((n) => n.x === cx && n.y === cy)) nubesRotas.push({ x: cx, y: cy, t: 0 });
           // caer encima de un botón responde
           if (nivel.mec === "botones") for (const cx of cols) if (nivel.t[cy][cx] === "losa") {
             const o = opciones.find((b) => b.tipo === "boton" && (cx === b.x || cx === b.x + 1));
@@ -278,20 +313,31 @@
       /* ---------------------------------------------------------- mundo en movimiento */
       const moverResto = (dt) => {
         const h = heroe;
+        // nubes: tiemblan 0,7 s, desaparecen y vuelven a los 3 s
+        nubesRotas.forEach((n) => { n.t += dt; if (n.t > 0.7 && nivel.t[n.y][n.x] === "nube") nivel.t[n.y][n.x] = null; if (n.t > 3.7) { nivel.t[n.y][n.x] = "nube"; n.fin = true; } });
+        nubesRotas = nubesRotas.filter((n) => !n.fin);
+        // volcán: bolas de fuego que saltan de cada foso de lava
+        saltosFuego.forEach((f) => {
+          if (f.espera > 0) { f.espera -= dt; if (f.espera <= 0) { f.y = VH + 10; f.vy = -330; } return; }
+          f.vy += 700 * dt; f.y += f.vy * dt;
+          if (f.y > VH + 20) f.espera = 1.8 + (f.x % 7) / 7;
+          if (Math.abs(f.x + 3 - (h.x + 6)) < 8 && Math.abs(f.y + 3 - (h.y + 8)) < 10) herir(f.x);
+        });
         moviles.forEach((p) => { p.x += p.vx * dt; if (p.x < p.min || p.x > p.max) { p.vx = -p.vx; p.x = Math.max(p.min, Math.min(p.max, p.x)); } });
         opciones.forEach((o) => { if (o.tipo === "burbuja") { o.y = o.y0 + Math.sin(t * 1.6 + o.fase) * 12; o.x = o.x0 + Math.sin(t * 0.9 + o.fase) * 10; } });
         bichos.forEach((b) => {
           if (!b.vivo) { b.aplastado -= dt; return; }
           b.fase += dt; b.x += b.vx * dt;
           if (b.tipo === "volador") { b.y = b.y0 + Math.sin(b.fase * 2.4) * 16; if (b.x < b.min || b.x > b.max) b.vx = -b.vx; }
+          else if (b.tipo === "cactus") { /* quieto */ }
           else {
             const frente = Math.floor((b.x + (b.vx > 0 ? 16 : 0)) / T);
             if (solido(frente, SUELO - 1) || !solido(frente, SUELO) || b.x < b.min || b.x > b.max) { b.vx = -b.vx; b.x = Math.max(b.min, Math.min(b.max, b.x)); }
           }
-          const alto = b.tipo === "volador" ? 8 : b.tipo === "pincho" ? 9 : 12, by = b.tipo === "pincho" ? b.y + 3 : b.y;
+          const alto = b.tipo === "volador" ? 8 : b.tipo === "pincho" ? 9 : b.tipo === "cactus" ? 14 : 12, by = b.tipo === "pincho" ? b.y + 3 : b.y;
           if (Math.abs(b.x + 8 - (h.x + 6)) < 12 && Math.abs(by + alto / 2 - (h.y + 8)) < 6 + alto / 2) {
             if (h.estrella > 0) { b.vivo = false; b.aplastado = 0.5; ctx.sumar(50); ctx.sonido.pisar(); }
-            else if (b.tipo !== "pincho" && h.vy > 60 && h.y + 15 < by + alto * 0.75) { b.vivo = false; b.aplastado = 0.5; h.vy = -230; ctx.sumar(50); ctx.sonido.pisar(); }
+            else if (b.tipo !== "pincho" && b.tipo !== "cactus" && h.vy > 60 && h.y + 15 < by + alto * 0.75) { b.vivo = false; b.aplastado = 0.5; h.vy = -230; ctx.sumar(50); ctx.sonido.pisar(); }
             else herir(b.x);
           }
         });
@@ -316,9 +362,10 @@
             if (j.disparo <= 0 && h.x > nivel.zona0 * T - 4 * T) {      // dispara solo cuando el héroe está cerca, lento y esquivable
               j.disparo = 3.4;
               const dx = h.x - j.x, dy = h.y - (j.y + 14), d = Math.hypot(dx, dy) || 1;
-              fuegos.push({ x: j.x, y: j.y + 14, vx: (dx / d) * 65, vy: (dy / d) * 65, t: 6 });
+              const v = 65 + 15 * jefesDerrotados; fuegos.push({ x: j.x, y: j.y + 14, vx: (dx / d) * v, vy: (dy / d) * v, t: 6 });
             }
-          } else if (j.estado === "rayo") { j.golpe -= dt; if (j.golpe <= 0) { j.estado = "cae"; j.vy = -120; } }
+          } else if (j.estado === "rayo") { j.golpe -= dt; if (j.golpe <= 0) { if (j.vida <= 0) { j.estado = "cae"; j.vy = -120; } else j.estado = "herido"; } }
+          else if (j.estado === "herido") { j.y -= 70 * dt; j.x += 50 * dt; if (j.y < -40) { j.estado = "fuera"; abrirReja(); } }
           else if (j.estado === "cae") { j.vy += GRAV * dt; j.y += j.vy * dt; if (j.y > VH + 40) { j.estado = "fuera"; abrirReja(); } }
           else if (j.estado === "huye") { j.y -= 90 * dt; j.x += 40 * dt; if (j.y < -40) { j.estado = "fuera"; abrirReja(); } }
           fuegos.forEach((f) => { f.x += f.vx * dt; f.y += f.vy * dt; f.t -= dt;
@@ -360,6 +407,34 @@
           g.fillStyle = "#ffffff";
           for (let i = 0; i < 40; i++) { const x = (i * 53 + cuadro * (0.3 + (i % 3) * 0.2) - camara * 0.6) % VW, y = (i * 37 + cuadro * (0.6 + (i % 4) * 0.15)) % VH;
             g.fillRect((x + VW) % VW, y, i % 3 ? 1 : 2, i % 3 ? 1 : 2); }
+        } else if (m === MUNDOS.desierto) {
+          g.fillStyle = "#fef3c7"; g.beginPath(); g.arc(250 - lejos % 40, 34, 16, 0, Math.PI * 2); g.fill();
+          for (const [vel, alto, col, ancho] of [[0.2, 34, "#f6c77a", 150], [0.45, 22, "#e9b05f", 100]]) {
+            for (let i = -1; i < 6; i++) { const cx = i * ancho - (camara * vel) % ancho; g.fillStyle = col; g.beginPath(); g.ellipse(cx + ancho / 2, SUELO * T + 4, ancho / 1.6, alto, 0, Math.PI, 0); g.fill(); }
+          }
+          g.fillStyle = "#9a6b2f";
+          for (let i = -1; i < 6; i++) { const cx = i * 90 - medio % 90 + 40; g.fillRect(cx, SUELO * T - 26, 4, 26); g.fillRect(cx - 6, SUELO * T - 20, 6, 3); g.fillRect(cx - 6, SUELO * T - 26, 3, 9); g.fillRect(cx + 4, SUELO * T - 16, 6, 3); g.fillRect(cx + 7, SUELO * T - 22, 3, 9); }
+        } else if (m === MUNDOS.selva) {
+          for (const [vel, col, alto] of [[0.25, "#166534", 90], [0.5, "#15803d", 60]]) {
+            for (let i = -1; i < 8; i++) { const cx = i * 60 - (camara * vel) % 60; g.fillStyle = "#3f2814"; g.fillRect(cx + 26, SUELO * T - alto, 6, alto);
+              g.fillStyle = col; g.beginPath(); g.arc(cx + 29, SUELO * T - alto, 22, 0, Math.PI * 2); g.fill(); }
+          }
+          g.strokeStyle = "#22c55e"; g.lineWidth = 2;
+          for (let i = -1; i < 7; i++) { const cx = i * 70 - medio % 70 + 20; g.beginPath(); g.moveTo(cx, 0); g.quadraticCurveTo(cx + 8, 30, cx, 55 + (i % 3) * 10); g.stroke(); }
+        } else if (m === MUNDOS.nubes) {
+          g.fillStyle = "rgba(255,255,255,.85)";
+          for (const [vel, y, r] of [[0.15, 40, 18], [0.35, 90, 24], [0.6, 128, 14]]) {
+            for (let i = -1; i < 6; i++) { const cx = i * 120 - (camara * vel + cuadro * 0.05) % 120 + 40;
+              g.beginPath(); g.arc(cx, y, r, 0, Math.PI * 2); g.arc(cx + r, y - r / 2, r, 0, Math.PI * 2); g.arc(cx + 2 * r, y, r, 0, Math.PI * 2); g.fill(); }
+          }
+        } else if (m === MUNDOS.volcan) {
+          for (let i = -1; i < 4; i++) { const cx = i * 200 - lejos % 200;
+            g.fillStyle = "#3b0d0d"; g.beginPath(); g.moveTo(cx, SUELO * T); g.lineTo(cx + 70, 50); g.lineTo(cx + 100, 50); g.lineTo(cx + 170, SUELO * T); g.fill();
+            g.fillStyle = "#f97316"; g.fillRect(cx + 74, 46, 22, 5); g.fillStyle = "#dc2626"; g.fillRect(cx + 80, 51, 4, 30); }
+          g.fillStyle = "#ff7a18";
+          for (let i = 0; i < 24; i++) { const x = (i * 61 - camara * 0.5) % VW, y = VH - ((cuadro * (0.7 + (i % 3) * 0.3) + i * 31) % VH);
+            g.globalAlpha = 0.7; g.fillRect((x + VW) % VW, y, 2, 2); }
+          g.globalAlpha = 1;
         } else {
           g.fillStyle = "#3a1424";
           for (let i = -1; i < 5; i++) { const cx = i * 150 - lejos % 150;
@@ -394,6 +469,10 @@
           g.fillStyle = "#1a1a2e"; g.fillRect(x, y, T, T);
           g.fillStyle = tipo === "usado" ? "#8b7355" : "#f5b400"; g.fillRect(x + 1, y + 1, T - 2, T - 2);
           if (tipo === "sorpresa") { g.fillStyle = "rgba(255,255,255,.5)"; g.fillRect(x + 1, y + 1, T - 2, 2); textoJuego(g, "?", x + 8, y + 8.5 + (Math.floor(cuadro / 20) % 2), 12, "#7c2d12", { sombra: null }); }
+        } else if (tipo === "nube") {
+          const n = nubesRotas.find((z) => z.x === cx && z.y === cy), tiembla = n ? Math.round(Math.sin(cuadro) * 1.5) : 0;
+          g.fillStyle = n ? "#e2e8f0" : "#ffffff"; g.beginPath(); g.arc(x + 8 + tiembla, y + 9, 8, 0, Math.PI * 2); g.fill();
+          g.fillStyle = "#cbd5e1"; g.fillRect(x + 2 + tiembla, y + 12, 12, 3);
         } else if (tipo === "reja") {
           g.fillStyle = "#374151"; g.fillRect(x + 2, y, 3, T); g.fillRect(x + 7, y, 3, T); g.fillRect(x + 12, y, 3, T);
           g.fillStyle = "#9ca3af"; g.fillRect(x + 2, y, 1, T); g.fillRect(x + 7, y, 1, T); g.fillRect(x + 12, y, 1, T);
@@ -467,6 +546,7 @@
           const x = Math.round(b.x + dx), y = Math.round(b.y), f = Math.floor(cuadro / 12) % 2;
           if (b.tipo === "volador") { if (b.vivo) g.drawImage(VOLADOR[Math.floor(cuadro / 7) % 2], x, y); return; }
           if (b.tipo === "pincho") { if (b.vivo) g.drawImage(PINCHO, x, y + 3); return; }
+          if (b.tipo === "cactus") { if (b.vivo) g.drawImage(CACTUS, x, y); return; }
           if (!b.vivo) { g.drawImage(mundo.caminante[1], 0, 6, 16, 6, x, y + 6, 16, 6); return; }
           g.drawImage(mundo.caminante[f], x, y);
         });
@@ -480,9 +560,12 @@
               while (py < jy + 10) { py += 8; px += (Math.random() - 0.5) * 10; g.lineTo(px, py); } g.stroke(); }
           }
           if (jefe.estado === "huye") textoJuego(g, "¡Ja, ja!", jx + 16, jy - 8, 9, "#fde047");
-          if (jefe.estado === "vivo") textoJuego(g, "Rey Bicho", jx + 16, jy - 7, 8, "#fca5a5");
+          if (jefe.estado === "herido") textoJuego(g, "¡Me las pagarás!", jx + 16, jy - 8, 8, "#fde047");
+          if (jefe.estado === "cae") textoJuego(g, "¡Derrotado!", jx + 16, jy - 8, 9, "#fde047");
+          if (jefe.estado === "vivo") textoJuego(g, `Rey Bicho ${"♥".repeat(Math.max(0, jefe.vida))}`, jx + 16, jy - 7, 8, "#fca5a5");
         }
         fuegos.forEach((f) => g.drawImage(FUEGO, Math.round(f.x + dx), Math.round(f.y)));
+        saltosFuego.forEach((f) => { if (f.espera <= 0) g.drawImage(FUEGO, Math.round(f.x + dx), Math.round(f.y), 9, 9); });
         const h = heroe;
         if (!(h.invul > 0 && Math.floor(cuadro / 4) % 2)) {
           const sp = !h.suelo ? pj.sp.salto : h.vx ? (Math.floor(h.paso / 10) % 2 ? pj.sp.paso1 : pj.sp.paso2) : pj.sp.quieto;
@@ -493,7 +576,7 @@
         if (cartel > 0) {
           g.globalAlpha = Math.min(1, cartel);
           g.fillStyle = "rgba(10,12,40,.82)"; g.fillRect(VW / 2 - 130, 30, 260, 38);
-          textoJuego(g, jefe ? "¡Jefe final!" : `Mundo ${mundo.nombre}`, VW / 2, 42, 12, "#fde047");
+          textoJuego(g, jefe ? (jefe.ultima ? "¡Jefe final!" : "¡Aparece el Rey Bicho!") + ` · vida ${"♥".repeat(Math.max(0, jefe.vida))}` : `Mundo ${mundo.nombre}`, VW / 2, 42, 12, "#fde047");
           textoJuego(g, jefe ? "Golpea desde abajo el bloque correcto para lanzarle un rayo" : mundo.ayuda, VW / 2, 57, 7.5, "#ffffff", { peso: 600 });
           g.globalAlpha = 1;
         }
@@ -573,7 +656,7 @@
       document.addEventListener("fullscreenchange", alRedimensionar);
       requestAnimationFrame((tm) => { ultimo = tm; paso(tm); });
       // para pruebas: estado interno e ir directo a una ronda
-      JUEGOS.plataformas._estado = () => ({ heroe, nivel, estado, reja, meta, jefe, bichos, opciones, moviles, mundo, teclas });
+      JUEGOS.plataformas._estado = () => ({ heroe, nivel, estado, reja, meta, jefe, bichos, opciones, moviles, mundo, teclas, vidaJefe, saltosFuego, nubesRotas });
       JUEGOS.plataformas._ronda = (r, i) => { ronda = r; if (i) info = i; crearNivel(); };
 
       return {
@@ -581,7 +664,10 @@
         trasResponder(bien) {
           if (jefe && jefe.estado === "vivo") {
             fuegos = [];
-            if (bien) { jefe.estado = "rayo"; jefe.golpe = 1.0; ctx.sumar(300); ctx.sonido.golpe(); } else jefe.estado = "huye";
+            if (bien) {
+              vidaJefe--; jefe.vida = vidaJefe; jefe.estado = "rayo"; jefe.golpe = 1.0; ctx.sonido.golpe();
+              if (vidaJefe <= 0) { ctx.sumar(500); jefesDerrotados++; vidaJefe = 3; } else ctx.sumar(300);   // derrotado: si quedan preguntas, vuelve más fuerte
+            } else jefe.estado = "huye";
           } else abrirReja();
         },
         destruir() {

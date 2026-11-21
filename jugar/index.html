@@ -143,6 +143,17 @@ function elegir() {
       <label for="apodo">Tu nombre</label><input id="apodo" maxlength="30" placeholder="Nombre y apellido">
       <button class="grande" id="unirme">¡A jugar!</button>`}
     <div id="msg"></div>`;
+  if (previo && previo.terminado && !DIRIGIDOS.includes(sala.modo)) {
+    // ya jugó su partida (laberinto, aventura): no se puede volver a empezar con las vidas llenas
+    const r = previo.resultado || {};
+    caja.innerHTML = `<div class="marca">${sala.juego === "laberinto" ? "🧭 Laberinto del saber" : "🍄 Aventura pixel"}</div>
+      <h1>${esc(sala.titulo)}</h1><p>Ya jugaste tu partida, <b>${esc(previo.nombre)}</b>.</p>
+      <div class="caja" style="background:#0f1440;box-shadow:none;margin-top:10px;text-align:center">
+        <div style="font-size:40px;font-weight:900">${Number(r.aciertos) || 0} / ${Number(r.total) || sala.paquete.preguntas.length}</div>
+        <div style="color:var(--suave)">respuestas correctas · ${Number(r.puntos) || 0} puntos</div></div>
+      <p class="nota">Tu resultado ya está en la tabla de posiciones de tu docente.</p>`;
+    return;
+  }
   if (previo) {
     $("#seguir").onclick = () => (DIRIGIDOS.includes(sala.modo) ? empezarEquipos : empezar)(previo);
     $("#otro").onclick = (e) => { e.preventDefault(); guardar(`vivo.${codigo}`, null); elegir(); };
@@ -184,7 +195,11 @@ function empezar(yo) {
     vidas: sala.vidas, repetir: false, sinSalir: true,
     mensajeFinal: `¡Bien, ${esc((yo.nombre.includes(",") ? yo.nombre.split(",")[1] : yo.nombre).trim().split(" ")[0])}! Tu resultado ya está en la tabla de posiciones de tu docente.`,
     alProgreso: (r) => enviar(r, false),
-    alTerminar: (r) => enviar(r, true),
+    alTerminar: (r) => {
+      // se recuerda en este aparato: al volver a entrar ve su resultado, no una partida nueva
+      guardar(`vivo.${codigo}`, { ...yo, terminado: true, resultado: { aciertos: r.aciertos, total: r.total, puntos: r.puntos } });
+      enviar(r, true);
+    },
   });
 }
 
