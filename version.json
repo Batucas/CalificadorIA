@@ -1,10 +1,10 @@
 {
-  "version": "2.9.2",
+  "version": "2.9.3",
   "descarga": "https://github.com/Batucas/CalificadorIA/releases/latest/download/Instalar_Calificador_IA.exe",
   "portal": "https://batucas.github.io/CalificadorIA/",
   "novedades": [
-    "Nuevo: Videos explicativos con voz. La IA escribe el guion y la app arma el video con textos animados y gráficos",
-    "Nuevo: probador de voces para elegir tu voz o una voz latina antes de generar",
-    "Nuevo: videos horizontales (clase, Moodle) o verticales (celular), con subtítulos"
+    "Nuevo simulador «Ruedas Eléctricas» en la pestaña Simuladores: cada equipo dirige una fábrica de bicicletas eléctricas que vende en La Paz, Cochabamba y Santa Cruz",
+    "Se juega en vivo con QR: los equipos deciden desde el celular y reciben estado de resultados, balance, flujo de caja, indicadores e informe final en Excel",
+    "La pestaña Simuladores muestra ahora los dos simuladores con el mismo formato para elegir"
   ]
 }
