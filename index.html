@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Calificador IA</title>
-<meta name="description" content="Califica tareas con IA, arma tus materias con el Proyecto Formativo y el aula de Moodle, y corrige exámenes escaneando las hojas. Para docentes universitarios.">
+<meta name="description" content="Califica tareas con IA, arma tu materia y el aula de Moodle, corrige exámenes escaneando, y da vida a tu clase con juegos y laboratorios en vivo, simuladores, calculadoras y videos explicativos con voz. Para docentes universitarios.">
 <meta property="og:title" content="Calificador IA — menos horas calificando, más horas enseñando">
-<meta property="og:description" content="Califica con IA, arma tu materia y corrige exámenes de opción múltiple. Para docentes. 10 créditos de regalo.">
+<meta property="og:description" content="Califica con IA, arma tu materia, corrige exámenes y da vida a tu clase: juegos y laboratorios en vivo, simuladores, calculadoras y videos con voz. Para docentes.">
 <meta property="og:image" content="img/revision.jpg">
 <link rel="icon" href="img/icono.png">
 <style>
@@ -96,6 +96,20 @@
   .icono-f { width: 54px; height: 54px; border-radius: 14px; display: grid; place-items: center; font-size: 28px; background: var(--azul-suave); margin-bottom: 16px; }
   @media (max-width: 900px) { .funcion, .funcion.inversa { grid-template-columns: 1fr; gap: 24px; } .funcion.inversa .texto { order: 0; } }
 
+  /* ============================================================ todo en una app */
+  .todo { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 36px; }
+  .todo a { background: var(--fondo); border: 1px solid var(--borde); border-radius: var(--radio); padding: 22px; text-decoration: none; color: var(--tinta);
+            transition: transform .12s, box-shadow .12s; display: block; }
+  .todo a:hover { transform: translateY(-2px); box-shadow: var(--sombra); }
+  .todo .ic { font-size: 30px; display: block; margin-bottom: 8px; }
+  .todo b { display: block; font-size: 18px; margin-bottom: 4px; }
+  .todo span.d { color: var(--texto-2); font-size: 15px; line-height: 1.45; display: block; }
+  .todo .nuevo { display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #fff; background: var(--verde);
+                 padding: 2px 8px; border-radius: 999px; margin-left: 6px; vertical-align: middle; }
+  @media (max-width: 980px) { .todo { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 520px) { .todo { grid-template-columns: 1fr; } }
+  .duo { display: grid; grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+
   /* ============================================================ pasos, precios, instalar */
   .pasos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 36px; counter-reset: paso; }
   .paso { background: var(--fondo); border: 1px solid var(--borde); border-radius: var(--radio); padding: 24px; position: relative; }
@@ -147,7 +161,7 @@
   <div class="contenedor">
     <a class="marca" href="#"><img src="img/icono.png" alt="">Calificador IA</a>
     <nav class="menu">
-      <a href="#funciones">Funciones</a><a href="#precios">Precios</a><a href="#instalar">Instalar</a><a href="#preguntas">Preguntas</a>
+      <a href="#todo">Funciones</a><a href="#videos">Videos</a><a href="#precios">Precios</a><a href="#instalar">Instalar</a><a href="#preguntas">Preguntas</a>
       <a class="btn primario" href="#" data-descarga>Descargar</a>
     </nav>
   </div>
@@ -158,13 +172,13 @@
     <div>
       <div class="chip" style="display:inline-block;margin-bottom:16px">Para docentes universitarios · Moodle</div>
       <h1>Menos horas calificando,<br>más horas enseñando.</h1>
-      <p>La IA califica las tareas de tus estudiantes —incluso fotos de trabajos hechos a mano—, arma tu materia con el Proyecto Formativo y el aula de Moodle, y corrige exámenes escaneando las hojas. <b>Tú revisas y decides la nota.</b></p>
+      <p>La IA califica las tareas de tus estudiantes —incluso fotos de trabajos hechos a mano—, arma tu materia y el aula de Moodle, y corrige exámenes escaneando las hojas. Y para la clase: <b>juegos y laboratorios en vivo con QR, simuladores, calculadoras y videos explicativos con voz.</b> Tú revisas y decides la nota.</p>
       <div class="acciones">
         <a class="btn claro" href="#" data-descarga><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Descargar para Windows</a>
         <a class="btn borde" href="#video">Ver cómo funciona</a>
       </div>
       <div class="nota"><span data-version>Versión 2.4</span> · Gratis para empezar: <b data-bienvenida>10</b> créditos de regalo al crear tu cuenta</div>
-      <div class="chips"><span class="chip">📝 Califica con IA</span><span class="chip">📚 Arma tu materia</span><span class="chip">🧾 Escanea exámenes</span></div>
+      <div class="chips"><span class="chip">📝 Califica con IA</span><span class="chip">📚 Arma tu materia</span><span class="chip">🧾 Escanea exámenes</span><span class="chip">🎮 Juegos en vivo</span><span class="chip">🧪 Laboratorios</span><span class="chip">📈 Simuladores</span><span class="chip">🧮 Calculadoras</span><span class="chip">🎬 Videos con voz</span></div>
     </div>
     <img class="captura" src="img/revision.jpg" alt="Revisión de calificaciones: nota, confianza y botón de aprobar por estudiante">
   </div>
@@ -184,12 +198,29 @@
   </div>
 </section>
 
+<section id="todo" class="gris" style="padding-bottom:0">
+  <div class="contenedor">
+    <span class="etiqueta">Todo en una sola app</span><h2>Ocho herramientas para tu semestre</h2>
+    <p class="sub">Desde planificar la materia hasta poner la nota final en Moodle, pasando por clases que tus estudiantes no olvidan.</p>
+    <div class="todo">
+      <a href="#f-calificar"><span class="ic">📝</span><b>Califica con IA</b><span class="d">Tareas de Moodle con tu rúbrica, incluso fotos de trabajos a mano.</span></a>
+      <a href="#f-materia"><span class="ic">📚</span><b>Arma tu materia</b><span class="d">Proyecto Formativo, aula de Moodle, libros y diapositivas.</span></a>
+      <a href="#f-examenes"><span class="ic">🧾</span><b>Exámenes escaneados</b><span class="d">Hoja de respuestas, fotos con el celular y notas a Moodle. Gratis.</span></a>
+      <a href="#f-juegos"><span class="ic">🎮</span><b>Juegos en vivo</b><span class="d">Quiz, torre por equipos, carrera y más, con QR desde el celular.</span></a>
+      <a href="#f-laboratorios"><span class="ic">🧪</span><b>Laboratorios<span class="nuevo">Nuevo</span></b><span class="d">Clases completas listas para proyectar, con sala en vivo para los equipos.</span></a>
+      <a href="#f-simuladores"><span class="ic">📈</span><b>Simuladores</b><span class="d">Tus equipos dirigen una empresa durante varios periodos.</span></a>
+      <a href="#f-calculadoras"><span class="ic">🧮</span><b>Calculadoras</b><span class="d">28 calculadoras con el desarrollo paso a paso, por QR o en Moodle.</span></a>
+      <a href="#videos"><span class="ic">🎬</span><b>Videos con voz<span class="nuevo">Nuevo</span></b><span class="d">La IA escribe el guion y la app arma el video con voz y gráficos.</span></a>
+    </div>
+  </div>
+</section>
+
 <section class="gris" id="funciones">
   <div class="contenedor">
-    <span class="etiqueta">Lo que hace</span><h2>Lo pesado, resuelto. La clase, más viva.</h2>
+    <span class="etiqueta">En detalle</span><h2>Lo pesado, resuelto. La clase, más viva.</h2>
     <p class="sub">Pensado para la forma real en que trabajamos los docentes: Moodle, trabajos a mano, rúbricas y fechas que se cruzan.</p>
 
-    <div class="funcion">
+    <div class="funcion" id="f-calificar">
       <div class="texto">
         <div class="icono-f">📝</div><h3 style="font-size:28px">Califica tareas con IA</h3>
         <p class="sub" style="font-size:17px">Elige la actividad de Moodle y la app descarga las entregas solas. La IA aplica tu rúbrica criterio por criterio y redacta la retroalimentación con tu estilo.</p>
@@ -204,7 +235,7 @@
       <div><div class="marco"><img src="img/revision.jpg" alt="Tabla de revisión con notas propuestas"></div><div class="pie-img">Revisión: nota propuesta, confianza y alertas por estudiante.</div></div>
     </div>
 
-    <div class="funcion inversa">
+    <div class="funcion inversa" id="f-materia">
       <div class="texto">
         <div class="icono-f">📚</div><h3 style="font-size:28px">Arma tu materia completa</h3>
         <p class="sub" style="font-size:17px">Sube el Programa Analítico y la app propone el Proyecto Formativo con fechas del módulo, y prepara el aula de Moodle lista para restaurar.</p>
@@ -222,7 +253,7 @@
       </div>
     </div>
 
-    <div class="funcion">
+    <div class="funcion" id="f-examenes">
       <div class="texto">
         <div class="icono-f">🧾</div><h3 style="font-size:28px">Corrige exámenes escaneando</h3>
         <p class="sub" style="font-size:17px">Como ZipGrade, pero integrado con Moodle. Imprime la hoja de respuestas, fotografía las hojas con el celular o escanéalas en PDF, y listo.</p>
@@ -240,7 +271,7 @@
       </div>
     </div>
 
-    <div class="funcion inversa">
+    <div class="funcion inversa" id="f-juegos">
       <div class="texto">
         <div class="icono-f">🎮</div><h3 style="font-size:28px">Juegos en vivo para tu clase</h3>
         <p class="sub" style="font-size:17px">Arma las preguntas con IA o a mano, proyecta un código QR y tus estudiantes juegan desde el celular, sin instalar nada. Al final, la nota pasa a una Tarea de Moodle.</p>
@@ -257,6 +288,74 @@
         <div class="marco"><img src="img/vivo_quiz.jpg" alt="Quiz en vivo proyectado: pregunta con cuatro opciones de colores"></div>
         <div class="marco"><img src="img/vivo_torre.jpg" alt="Torre por equipos: torres de bloques de cada equipo y el mono"></div>
         <div class="marco"><img src="img/vivo_ritmo.jpg" alt="A tu ritmo: carrera de los estudiantes y preguntas que más costaron"></div>
+      </div>
+    </div>
+
+    <div class="funcion" id="f-laboratorios">
+      <div class="texto">
+        <div class="icono-f">🧪</div><h3 style="font-size:28px">Laboratorios: clases completas, listas para proyectar</h3>
+        <p class="sub" style="font-size:17px">Una biblioteca compartida entre docentes con actividades de aula de una o varias sesiones, cada una con su guía del docente, hojas de trabajo y rúbrica. Bájalas con un clic o sube la tuya.</p>
+        <ul>
+          <li><b>Sala en vivo con QR</b>: cada equipo entra desde el celular, toma sus decisiones y tú ves todo en el proyector.</li>
+          <li><b>Casos para varias carreras</b>: trading en Wall Street, gobernar una economía, una investigación judicial, estadística con datos reales, estudios de mercado y más.</li>
+          <li><b>Sin azar</b>: todos los equipos enfrentan los mismos eventos; gana quien decide mejor.</li>
+          <li><b>La nota sale sola</b>: por el resultado del juego, con una rúbrica o con tu criterio, y pasa a Moodle o a Excel.</li>
+        </ul>
+      </div>
+      <div class="mosaico">
+        <div class="marco"><img src="img/lab_macro.jpg" alt="Laboratorio Gobiernen una economía: indicadores, gráfico IS-LM y decisiones del equipo"></div>
+        <div class="marco"><img src="img/lab_trading.jpg" alt="Wall Street Challenge: pantalla de entrada de los equipos"></div>
+        <div class="marco"><img src="img/laboratorios.jpg" alt="Biblioteca de laboratorios por facultad y carrera"></div>
+      </div>
+    </div>
+
+    <div class="funcion inversa" id="f-simuladores">
+      <div class="texto">
+        <div class="icono-f">📈</div><h3 style="font-size:28px">Simuladores de negocios</h3>
+        <p class="sub" style="font-size:17px">Tus estudiantes, en equipos, dirigen una empresa boliviana durante varios periodos: producción, precios, marketing, finanzas y logística. El mercado responde y la IA les ayuda a entender por qué pasó lo que pasó.</p>
+        <ul>
+          <li><b>Partidas desde tu curso de Moodle</b>: armas los equipos con la lista del curso y cada uno recibe su código.</li>
+          <li><b>Ranking por periodo</b> y nota final según la posición y los resultados de la empresa.</li>
+          <li>Los estudiantes entran desde la web, sin crear cuentas ni contraseñas.</li>
+        </ul>
+      </div>
+      <div><div class="marco"><img src="img/simulador.jpg" alt="Simulador de negocios: página de entrada de los equipos"></div><div class="pie-img">Los equipos entran con el código que les da su docente.</div></div>
+    </div>
+
+    <div class="funcion" id="f-calculadoras">
+      <div class="texto">
+        <div class="icono-f">🧮</div><h3 style="font-size:28px">Calculadoras para tus estudiantes</h3>
+        <p class="sub" style="font-size:17px">28 calculadoras de estadística, finanzas y economía que muestran el resultado, el gráfico y el desarrollo paso a paso, para que el estudiante entienda y no solo copie.</p>
+        <ul>
+          <li><b>Chi-cuadrado, intervalos, pruebas de hipótesis, ANOVA, regresión</b> y más.</li>
+          <li><b>Interés, anualidades, amortización, VAN y TIR, CAPM, punto de equilibrio, elasticidad</b> y conversores.</li>
+          <li>Compártelas con un <b>QR en clase</b> o como enlace en tu aula de <b>Moodle</b>. Gratis.</li>
+        </ul>
+      </div>
+      <div><div class="marco"><img src="img/calculadoras.jpg" alt="Lista de calculadoras de estadística, finanzas, economía y conversores"></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="videos">
+  <div class="contenedor">
+    <div class="funcion inversa" style="margin-top:0">
+      <div class="texto">
+        <div class="icono-f">🎬</div><span class="etiqueta">Nuevo</span><h3 style="font-size:28px">Videos explicativos con voz</h3>
+        <p class="sub" style="font-size:17px">Escribe el tema y la IA propone el guion por escenas: lo que dice la voz y lo que aparece en pantalla. Tú lo corriges y la app arma el video con textos animados, fórmulas paso a paso y gráficos que se dibujan al ritmo de la voz.</p>
+        <ul>
+          <li><b>Dos tipos</b>: explicar un concepto o un gráfico animado (oferta y demanda, IS-LM, DA-OA, punto de equilibrio, datos y barras).</li>
+          <li><b>Voz natural</b> de ElevenLabs: tu propia voz clonada o una voz latina de la biblioteca, que pruebas antes de elegir.</li>
+          <li><b>Horizontal o vertical</b>: para proyectar en clase, subir a Moodle o compartir en el celular, con subtítulos.</li>
+          <li>Sale un <b>MP4</b> listo para usar. Si cambias una escena, solo se vuelve a generar esa voz.</li>
+        </ul>
+      </div>
+      <div class="duo">
+        <div class="pila" style="display:grid;gap:12px">
+          <div class="marco"><img src="img/video_grafico.jpg" alt="Video: el punto de equilibrio dibujado paso a paso"></div>
+          <div class="marco"><img src="img/video_editor.jpg" alt="Editor del guion: voz, texto en pantalla y paso del gráfico"></div>
+        </div>
+        <div class="marco"><img src="img/video_vertical.jpg" alt="Video vertical para celular: modelo IS-LM con más gasto público"></div>
       </div>
     </div>
   </div>
@@ -287,6 +386,8 @@
         <tr><td>Calificar una tarea de 40 estudiantes</td><td>2 – 4</td></tr>
         <tr><td>Armar una materia completa (Claude Sonnet)</td><td>10 – 20</td></tr>
         <tr><td>Corregir exámenes escaneados</td><td><b>0 (gratis)</b></td></tr>
+        <tr><td>Juegos en vivo, laboratorios de la biblioteca y calculadoras</td><td><b>0 (gratis)</b></td></tr>
+        <tr><td>Guion de un video explicativo (Claude Sonnet)</td><td>0,4 – 0,6 · la voz se paga en tu cuenta de ElevenLabs (tiene plan gratis)</td></tr>
       </tbody>
     </table>
     <p class="solo-windows">Los créditos dependen del largo de los trabajos y del modelo elegido. La app muestra el costo estimado antes de calificar.</p>
@@ -298,7 +399,7 @@
     <span class="etiqueta">Instalación</span><h2>Instalar en Windows</h2>
     <div class="instalar">
       <ol class="instrucciones">
-        <li><b>Descarga</b> «Instalar_Calificador_IA.exe» con el botón de abajo (unos 140 MB).</li>
+        <li><b>Descarga</b> «Instalar_Calificador_IA.exe» con el botón de abajo (unos 180 MB).</li>
         <li><b>Ábrelo.</b> Windows puede mostrar «Windows protegió su PC», porque el programa es nuevo y todavía no tiene firma comercial. Pulsa <b>«Más información»</b> y luego <b>«Ejecutar de todas formas»</b>.</li>
         <li>Pulsa <b>Instalar</b>. No pide permisos de administrador y crea el acceso en el escritorio.</li>
         <li>Abre la app y entra a <b>Ajustes → Cuenta</b> para crear tu cuenta.</li>
@@ -327,6 +428,8 @@
     <details><summary>¿Necesito una clave de IA o una tarjeta internacional?</summary><p>No. Solo creas tu cuenta y compras créditos con QR desde la app.</p></details>
     <details><summary>¿Funciona con mi Moodle?</summary><p>Funciona con Moodle 4 de la universidad, iniciando sesión con tu cuenta institucional (Microsoft). Para publicar notas usa los mismos permisos que tienes como docente.</p></details>
     <details><summary>¿«Armar materia» sirve para cualquier universidad?</summary><p>El Excel y el aula siguen el formato del Proyecto Formativo de la UPDS (plantilla 2026). Las presentaciones, libros, ejercicios y autoevaluaciones sirven para cualquier materia.</p></details>
+    <details><summary>¿Qué necesito para hacer videos?</summary><p>Una cuenta de ElevenLabs para la voz (tiene plan gratis, con unos 10.000 caracteres al mes: unos 7 videos cortos). La primera vez, la app descarga sola el motor de video (unos 400 MB); no tienes que instalar nada más.</p></details>
+    <details><summary>¿Puedo subir mis propios laboratorios?</summary><p>Sí. Desde «Laboratorios → Subir el mío» compartes tu actividad (un HTML con sus documentos) con los demás docentes, indicando la facultad, la carrera y la materia.</p></details>
     <details><summary>¿Es una herramienta oficial de la universidad?</summary><p>No. Es una herramienta independiente creada por un docente para docentes. Tú decides cómo usarla en tus materias.</p></details>
     <details><summary>¿Cuánto tarda en acreditarse un pago?</summary><p>Normalmente el mismo día: subes la captura del comprobante y el administrador lo verifica.</p></details>
     <details><summary>¿Puedo usarlo en Mac?</summary><p>Por ahora solo en Windows 10 u 11.</p></details>
@@ -337,7 +440,7 @@
   <div class="contenedor">
     <div class="cta-final">
       <h2>Prueba gratis con <span data-bienvenida>10</span> créditos</h2>
-      <p>Descarga la app, crea tu cuenta y califica tu primera tarea hoy.</p>
+      <p>Descarga la app, crea tu cuenta y prueba hoy: califica una tarea, proyecta un laboratorio o arma tu primer video.</p>
       <a class="btn claro" href="#" data-descarga style="margin-top:12px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Descargar para Windows</a>
     </div>
   </div>

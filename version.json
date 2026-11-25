@@ -1,11 +1,10 @@
 {
-  "version": "2.9.1",
+  "version": "2.9.2",
   "descarga": "https://github.com/Batucas/CalificadorIA/releases/latest/download/Instalar_Calificador_IA.exe",
   "portal": "https://batucas.github.io/CalificadorIA/",
   "novedades": [
-    "Nuevo: laboratorios en vivo; los equipos entran con QR y el laboratorio se abre en el celular",
-    "Nuevo: el botón de sala con QR solo aparece en los laboratorios que funcionan en vivo",
-    "Nuevo: tres formas de calificar los laboratorios y nota mínima para el último lugar (51 por defecto)",
-    "Nuevo: tus exámenes se guardan en la nube y aparecen en cualquier computadora donde entres con tu cuenta"
+    "Nuevo: Videos explicativos con voz. La IA escribe el guion y la app arma el video con textos animados y gráficos",
+    "Nuevo: probador de voces para elegir tu voz o una voz latina antes de generar",
+    "Nuevo: videos horizontales (clase, Moodle) o verticales (celular), con subtítulos"
   ]
 }
