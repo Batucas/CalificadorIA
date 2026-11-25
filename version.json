@@ -1,9 +1,11 @@
 {
-  "version": "2.8.1",
+  "version": "2.9.1",
   "descarga": "https://github.com/Batucas/CalificadorIA/releases/latest/download/Instalar_Calificador_IA.exe",
   "portal": "https://batucas.github.io/CalificadorIA/",
   "novedades": [
-    "Corrección: Laboratorios ahora avisa solo cuando llegan los resultados, sin tener que recargar la sesión",
-    "Corrección: al activar Examen, Simulador, Actividad interactiva o Laboratorio en Personalizar, ahora se garantiza que aparezcan en el Proyecto Formativo"
+    "Nuevo: laboratorios en vivo; los equipos entran con QR y el laboratorio se abre en el celular",
+    "Nuevo: el botón de sala con QR solo aparece en los laboratorios que funcionan en vivo",
+    "Nuevo: tres formas de calificar los laboratorios y nota mínima para el último lugar (51 por defecto)",
+    "Nuevo: tus exámenes se guardan en la nube y aparecen en cualquier computadora donde entres con tu cuenta"
   ]
 }
