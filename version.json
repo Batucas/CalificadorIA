@@ -1,10 +1,10 @@
 {
-  "version": "2.9.4",
+  "version": "2.9.5",
   "descarga": "https://github.com/Batucas/CalificadorIA/releases/latest/download/Instalar_Calificador_IA.exe",
   "portal": "https://batucas.github.io/CalificadorIA/",
   "novedades": [
-    "La app se usa solo con una cuenta habilitada: al abrirla se pide entrar con tu cuenta del Calificador",
-    "Las cuentas nuevas esperan la aprobación del administrador antes de poder usarse",
-    "Sin internet, la app sigue funcionando hasta 3 días desde la última revisión de la cuenta"
+    "La calificación de trabajos y actividades usa siempre Claude Haiku",
+    "El modelo para armar materias y videos lo define el administrador del Calificador para todos los docentes",
+    "En Ajustes puedes ver qué modelo usa cada tarea"
   ]
 }
