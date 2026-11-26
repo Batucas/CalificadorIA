@@ -1,10 +1,10 @@
 {
-  "version": "2.9.5",
+  "version": "2.9.6",
   "descarga": "https://github.com/Batucas/CalificadorIA/releases/latest/download/Instalar_Calificador_IA.exe",
   "portal": "https://batucas.github.io/CalificadorIA/",
   "novedades": [
     "La calificación de trabajos y actividades usa siempre Claude Haiku",
-    "El modelo para armar materias y videos lo define el administrador del Calificador para todos los docentes",
-    "En Ajustes puedes ver qué modelo usa cada tarea"
+    "La configuración de la inteligencia artificial la maneja el administrador del Calificador",
+    "Mejoras internas para preparar el armado de materias"
   ]
 }
