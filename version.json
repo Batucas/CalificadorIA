@@ -1,10 +1,10 @@
 {
-  "version": "2.9.8",
+  "version": "2.9.9",
   "descarga": "https://github.com/Batucas/CalificadorIA/releases/latest/download/Instalar_Calificador_IA.exe",
   "portal": "https://batucas.github.io/CalificadorIA/",
   "novedades": [
-    "Videos: la voz ya no tiene cortes entre frases",
-    "Los videos que ya hiciste se reparan al volver a generarlos, sin gastar caracteres de ElevenLabs",
-    "Videos: música de fondo opcional, con lista de pistas y control de volumen"
+    "Videos: nueva biblioteca de videos compartidos entre docentes, ordenada por área",
+    "Mira, descarga o abre para adaptar los videos de otros docentes sin pagar la voz",
+    "Cada video tiene su imagen de portada: automática o la tuya"
   ]
 }
