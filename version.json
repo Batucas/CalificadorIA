@@ -1,10 +1,10 @@
 {
-  "version": "2.9.9",
+  "version": "2.10.0",
   "descarga": "https://github.com/Batucas/CalificadorIA/releases/latest/download/Instalar_Calificador_IA.exe",
   "portal": "https://batucas.github.io/CalificadorIA/",
   "novedades": [
-    "Videos: nueva biblioteca de videos compartidos entre docentes, ordenada por área",
-    "Mira, descarga o abre para adaptar los videos de otros docentes sin pagar la voz",
-    "Cada video tiene su imagen de portada: automática o la tuya"
+    "Nuevo: Presentaciones interactivas, con 6 diseños para elegir",
+    "Créalas con IA desde un tema, una materia o un documento, o convierte tu PowerPoint",
+    "Descárgalas en un solo archivo o llévalas a Moodle: las preguntas de repaso dan la nota"
   ]
 }
