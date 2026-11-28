@@ -1,10 +1,10 @@
 {
-  "version": "2.9.7",
+  "version": "2.9.8",
   "descarga": "https://github.com/Batucas/CalificadorIA/releases/latest/download/Instalar_Calificador_IA.exe",
   "portal": "https://batucas.github.io/CalificadorIA/",
   "novedades": [
-    "Videos: ahora puedes agregar música de fondo, elegida de una lista de 7 pistas",
-    "Escucha cada pista antes de elegirla y ajusta su volumen",
-    "La música baja sola mientras habla la voz y sube en los silencios"
+    "Videos: la voz ya no tiene cortes entre frases",
+    "Los videos que ya hiciste se reparan al volver a generarlos, sin gastar caracteres de ElevenLabs",
+    "Videos: música de fondo opcional, con lista de pistas y control de volumen"
   ]
 }
