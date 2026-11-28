@@ -1,10 +1,10 @@
 {
-  "version": "2.9.6",
+  "version": "2.9.7",
   "descarga": "https://github.com/Batucas/CalificadorIA/releases/latest/download/Instalar_Calificador_IA.exe",
   "portal": "https://batucas.github.io/CalificadorIA/",
   "novedades": [
-    "La calificación de trabajos y actividades usa siempre Claude Haiku",
-    "La configuración de la inteligencia artificial la maneja el administrador del Calificador",
-    "Mejoras internas para preparar el armado de materias"
+    "Videos: ahora puedes agregar música de fondo, elegida de una lista de 7 pistas",
+    "Escucha cada pista antes de elegirla y ajusta su volumen",
+    "La música baja sola mientras habla la voz y sube en los silencios"
   ]
 }
