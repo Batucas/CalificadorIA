@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Política de privacidad · Calificador IA</title>
+<meta name="description" content="Cómo trata Calificador IA los datos de los docentes y de sus estudiantes.">
+<link rel="icon" href="img/icono.png">
+<style>
+  :root { --tinta: #1c2333; --suave: #5b6475; --primario: #4f46e5; --fondo: #f6f7fb; --borde: #e3e6ee; }
+  body { margin: 0; font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; color: var(--tinta); background: var(--fondo);
+         line-height: 1.65; font-size: 17px; }
+  main { max-width: 760px; margin: 0 auto; padding: 40px 20px 60px; }
+  .caja { background: #fff; border: 1px solid var(--borde); border-radius: 16px; padding: 32px 36px; }
+  h1 { font-size: 30px; margin: 0 0 4px; }
+  h2 { font-size: 20px; margin: 28px 0 6px; }
+  p, li { color: #2b3242; }
+  .fecha { color: var(--suave); font-size: 14px; margin: 0 0 18px; }
+  a { color: var(--primario); }
+  .volver { display: inline-block; margin-bottom: 18px; text-decoration: none; }
+  @media (max-width: 560px) { .caja { padding: 22px 18px; } }
+</style>
+</head>
+<body>
+<main>
+  <a class="volver" href="./">← Volver a Calificador IA</a>
+  <div class="caja">
+    <h1>Política de privacidad</h1>
+    <p class="fecha">Calificador IA · Última actualización: 28 de noviembre de 2026</p>
+
+    <p>Calificador IA es una aplicación para docentes universitarios, diseñada por el Lic. Salvador Ortega Pardo. Esta página
+      explica, en lenguaje sencillo, qué datos usa la aplicación, para qué y con quién se comparten.</p>
+
+    <h2>Datos de la cuenta del docente</h2>
+    <p>Para usar la aplicación, el docente crea una cuenta con su nombre y su correo electrónico. Estos datos y el saldo de créditos
+      se guardan en el servidor del Calificador (Supabase) y solo se usan para dar acceso a la aplicación y llevar la cuenta de créditos.</p>
+
+    <h2>Trabajos y notas de los estudiantes</h2>
+    <p>Las tareas, los exámenes y las notas se guardan en la computadora del docente. Cuando el docente pide calificar con
+      inteligencia artificial, el texto o las imágenes de cada trabajo se envían al proveedor de IA solo para obtener la nota propuesta y la
+      retroalimentación. El Calificador no vende ni comparte estos datos con nadie más. El docente revisa y decide cada nota.</p>
+
+    <h2>Videos explicativos y biblioteca de videos</h2>
+    <ul>
+      <li>La voz de los videos se genera con la cuenta de ElevenLabs del propio docente.</li>
+      <li>Si el docente deja marcada la opción «Compartir en la biblioteca», el video, su guion, su voz y su imagen de portada se
+        guardan en una carpeta de Google Drive del administrador del Calificador y quedan visibles para los demás docentes, con el
+        nombre del autor. El docente puede dejar de compartir un video en cualquier momento, y entonces se borra de la biblioteca.</li>
+      <li>La aplicación usa el permiso de Google Drive «drive.file»: solo puede ver y manejar los archivos que ella misma crea en
+        esa carpeta. No tiene acceso a ningún otro archivo del Drive.</li>
+    </ul>
+
+    <h2>Servicios de terceros</h2>
+    <p>La aplicación se apoya en Supabase (servidor y base de datos), proveedores de inteligencia artificial (para calificar y preparar
+      materiales), ElevenLabs (voz de los videos), Google Drive (biblioteca de videos) y GitHub (descarga de la aplicación). Cada uno
+      trata los datos según sus propias políticas.</p>
+
+    <h2>Borrar datos</h2>
+    <p>El docente puede pedir que se borre su cuenta y los videos que compartió escribiendo al contacto de abajo.</p>
+
+    <h2>Contacto</h2>
+    <p>Lic. Salvador Ortega Pardo · <a href="mailto:salvadorv.ortega@proton.me">salvadorv.ortega@proton.me</a></p>
+  </div>
+</main>
+</body>
+</html>
